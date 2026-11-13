@@ -1,0 +1,14 @@
+{
+  "name": "스테이지 분석기",
+  "short_name": "스테이지",
+  "description": "30주 이동평균으로 보는 4단계 주기 분석",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#18211c",
+  "theme_color": "#18211c",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"}
+  ]
+}
