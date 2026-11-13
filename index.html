@@ -466,6 +466,50 @@ function recompute(){
   cache.list={};
   state.stocks.forEach(s=>{cache.list[s.id]=analyze(s.rows,state.market?state.market.rows:null,ms);});
 }
+const PER_STAGE=10;
+async function loadSamples(){
+  if(state.busy)return;
+  if(!state.conn.url||!state.conn.secret){refreshErr='연결 탭에서 서버 주소와 비밀키를 먼저 입력하세요.';state.tab='conn';state.sel=null;state.form=null;render();return;}
+  state.sel=null;state.form=null;state.tab='stocks';state.stop=false;refreshErr='';
+  const seen=new Set(),uni=[];
+  [...STOCKDB,...state.cands].forEach(x=>{if(/^(KODEX|TIGER)/i.test(x.name)||seen.has(x.code))return;seen.add(x.code);uni.push({name:x.name,code:x.code});});
+  const days=Math.min(state.conn.days||1100,800);
+  const res=[],errs=[];let done=0,okN=0,fatal='';
+  const mcode=state.conn.mktCode||'069500';
+  state.busy='시장 지수 조회 중…';render();
+  try{
+    if(!state.market||state.market.ex||state.market.code!==mcode){const r=await fetchWeekly(mcode);state.market={name:'시장 ('+mcode+')',code:mcode,rows:r.rows};}
+    else{const r=await fetchWeekly(mcode);state.market.rows=r.rows;}
+  }catch(e){state.busy='';refreshErr=e.message;render();return;}
+  recompute();
+  const ms=cache.mkt&&!cache.mkt.err?cache.mkt.stage:null,bench=state.market.rows;
+  const q=uni.slice();
+  const worker=async()=>{
+    while(q.length&&!state.stop&&!fatal){
+      const it=q.shift();
+      try{
+        const r=await fetchWeekly(it.code),A=analyze(r.rows,bench,ms);
+        if(!A.err){res.push({name:it.name,code:it.code,rows:r.rows,A});okN++;}
+      }catch(e){errs.push(it.name+': '+e.message);if(!okN&&errs.length>=4&&/비밀키|연결하지/.test(e.message))fatal=e.message;}
+      done++;state.busy='단계별 종목 찾는 중 '+done+'/'+uni.length+' · 분석 성공 '+okN;
+      if(state.tab==='stocks'&&!state.sel&&!state.form)render();
+    }
+  };
+  await Promise.all([worker(),worker(),worker()]);
+  state.busy='';
+  if(fatal){refreshErr=fatal;render();return;}
+  const rank=(a,b)=>SIGORD[a.A.sig.k]-SIGORD[b.A.sig.k]||b.A.score-a.A.score||(b.A.rsNow??-99)-(a.A.rsNow??-99)||a.A.ext-b.A.ext;
+  const mine=new Set(state.stocks.filter(x=>!x.auto).map(x=>x.code));
+  const picked=[];
+  for(let st=1;st<=4;st++){
+    res.filter(x=>x.A.stage===st&&!mine.has(x.code)).sort(rank).slice(0,PER_STAGE).forEach(x=>picked.push(x));
+  }
+  state.stocks=state.stocks.filter(x=>!x.auto&&!x.ex);
+  picked.forEach(x=>state.stocks.push({id:uid(),name:x.name,code:x.code,rows:x.rows,auto:true}));
+  const cnt=[1,2,3,4].map(k=>k+'단계 '+picked.filter(x=>x.A.stage===k).length).join(' · ');
+  refreshErr=(state.stop?'중단됨. ':'')+'불러온 종목: '+cnt+(errs.length?' · 조회 실패 '+errs.length+'개 ('+errs.slice(0,2).join(' / ')+')':'');
+  state.lastRefresh=Date.now();save();recompute();render();
+}
 function addExamples(){
   const ex=exampleSet();
   if(!state.market)state.market=ex.market;
@@ -506,7 +550,7 @@ function listHTML(){
   }).join('');
   const hasEx=state.stocks.some(s=>s.ex)||(state.market&&state.market.ex);
   return `<div class="bar"><button class="btn primary" data-act="add-stock">종목 추가</button><button class="btn" data-act="add-bulk">코드로 일괄 추가</button><button class="btn" data-act="refresh-all" ${state.busy?'disabled':''}>전체 새로고침</button>${state.stocks.length?`<button class="btn" data-act="toggle-manage">${state.manage?'정리 끝내기':'종목 정리(삭제)'}</button>`:''}
-    <button class="btn" data-act="load-ex">예시 불러오기</button>${hasEx?'<button class="btn" data-act="clear-ex">예시 지우기</button>':''}</div>
+    <button class="btn" data-act="load-ex" ${state.busy?'disabled':''}>단계별 10종목 불러오기</button>${hasEx?'<button class="btn" data-act="clear-ex">예시 지우기</button>':''}</div>
     ${state.manage?'<p class="note">삭제할 종목의 삭제 버튼을 누르세요. 추가한 종목은 이 기기에 자동 저장됩니다.</p>':''}${statusHTML()}${!state.busy&&state.lastRefresh?`<p class="note">마지막 새로고침 ${esc(new Date(state.lastRefresh).toLocaleString('ko-KR'))}</p>`:''}${resultsHTML(items)}
     ${items.length?`<div class="summary">${sum}</div><div class="list">${rows}</div>`:`<div class="card"><h3>등록된 종목이 없습니다</h3><p class="note">종목 추가에서 일봉 또는 주봉 표를 붙여넣으면 현재 단계와 매수·매도 신호를 계산합니다.</p></div>`}
     <details class="card" style="margin-top:14px"><summary>백업과 복원</summary>
@@ -516,7 +560,7 @@ function listHTML(){
       ${ioMsg?`<p class="note">${esc(ioMsg)}</p>`:''}</details>
     <p class="foot">이 앱은 책의 규칙을 기계적으로 적용한 참고용 도구이며, 투자 판단과 책임은 본인에게 있습니다.</p>`;
 }
-function statusHTML(){return (state.busy?`<p class="note" role="status">${esc(state.busy)}</p>`:'')+(refreshErr?`<p class="err">${esc(refreshErr)}</p>`:'');}
+function statusHTML(){return (state.busy?`<p class="note" role="status">${esc(state.busy)}${state.busy.startsWith('단계별')?' <button class="btn small" data-act="scan-stop">중단</button>':''}</p>`:'')+(refreshErr?`<p class="err">${esc(refreshErr)}</p>`:'');}
 function resultsHTML(items){
   const ok=items.filter(x=>!x.A.err);
   if(!ok.length)return '';
@@ -584,7 +628,7 @@ function detailHTML(id){
 function marketHTML(){
   const m=state.market,A=cache.mkt;
   if(!m)return `<div class="card"><h3>시장 지수를 등록하세요</h3><p class="note">코스피, 코스닥, S&amp;P 500 같은 지수의 일봉 또는 주봉을 붙여넣으면 시장 단계를 판정하고, 종목의 상대강도와 매수 체크리스트에 반영합니다.</p></div>
-    <div class="bar"><button class="btn primary" data-act="fetch-market" ${state.busy?'disabled':''}>자동 조회</button><button class="btn" data-act="add-market">직접 등록</button><button class="btn" data-act="load-ex">예시 불러오기</button></div>`;
+    <div class="bar"><button class="btn primary" data-act="fetch-market" ${state.busy?'disabled':''}>자동 조회</button><button class="btn" data-act="add-market">직접 등록</button></div>`;
   if(!A||A.err)return `<div class="card"><p class="err">${esc(A?A.err:'분석 실패')}</p></div><div class="bar"><button class="btn" data-act="add-market">다시 등록</button></div>`;
   view={rows:m.rows,A};
   return statusHTML()+heroHTML(m.name,A,true)+chartHTML(A,false)+
@@ -888,11 +932,11 @@ function candHTML(){
     <p class="note">출처: <a href="${CANDS.url}" rel="noopener">${esc(CANDS.src)}</a></p></div>${cards}
     <p class="foot">참고용 정보이며 투자 권유가 아닙니다.</p>`;
 }
-async function addCodes(codes){
+async function addCodes(codes,tab){
   if(state.busy)return;
-  const have=new Set(state.stocks.map(s=>s.code)),errs=[],nm={};state.cands.forEach(x=>{nm[x.code]=x.name;});
+  const have=new Set(state.stocks.map(s=>s.code)),errs=[],nm={};STOCKDB.forEach(x=>{nm[x.code]=x.name;});state.cands.forEach(x=>{nm[x.code]=x.name;});
   if(!state.conn.url||!state.conn.secret){refreshErr='연결 탭에서 서버 주소와 비밀키를 먼저 입력하세요.';render();return;}
-  state.tab='cand';refreshErr='';
+  state.tab=tab||'cand';refreshErr='';
   for(let i=0;i<codes.length;i++){
     const cd=codes[i];if(have.has(cd))continue;
     state.busy='종목 추가 중 '+(i+1)+'/'+codes.length+' · '+(nm[cd]||cd);render();
@@ -1010,7 +1054,8 @@ document.addEventListener('click',e=>{
   else if(act==='toggle-manage'){state.manage=!state.manage;render();}
   else if(act==='delete'){const t=state.stocks.find(s=>s.id===id);if(t&&!confirm('"'+t.name+'" 종목을 삭제할까요?'))return;state.stocks=state.stocks.filter(s=>s.id!==id);state.sel=null;save();recompute();if(!state.stocks.length)state.manage=false;render();}
   else if(act==='del-market'){state.market=null;save();recompute();render();}
-  else if(act==='load-ex'){addExamples();render();}
+  else if(act==='load-ex'){loadSamples();}
+  else if(act==='scan-stop'){state.stop=true;b.disabled=true;}
   else if(act==='clear-ex'){state.stocks=state.stocks.filter(s=>!s.ex);if(state.market&&state.market.ex)state.market=null;save();recompute();render();}
   else if(act==='export'){const t=$('#io');t.value=JSON.stringify({v:1,market:state.market,stocks:state.stocks.filter(s=>!s.ex)});ioMsg='';}
   else if(act==='copy-io'){const t=$('#io');t.select();try{navigator.clipboard.writeText(t.value);}catch(err){}}
@@ -1068,7 +1113,7 @@ try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',
 new MutationObserver(()=>drawAll()).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 
 load();syncCands();save();
-if(!state.booted&&!state.stocks.length&&!state.market){addExamples();}
+state.stocks=state.stocks.filter(s=>!s.ex);if(state.market&&state.market.ex)state.market=null;save();
 recompute();render();
 if(state.conn.auto&&state.conn.url&&state.conn.secret)refreshAll(true,true);
 </script>
