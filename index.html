@@ -14,7 +14,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+KR:wght@400;500;700&family=IBM+Plex+Sans+KR:wght@600;700&family=Noto+Serif+KR:wght@600;800&display=swap" rel="stylesheet">
 <style>
 /* 레이아웃: 한 칼럼. 종목 목록에서 상세로 들어가는 구조, 시장 단계는 항상 상단에 표시 */
 :root{
@@ -23,6 +23,7 @@
   --s1:#6b7a99; --s2:#1f8a5b; --s3:#c98a12; --s4:#c2412d;
   --font-body:'Noto Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
   --font-display:'Noto Serif KR','Batang',serif;
+  --font-title:'IBM Plex Sans KR','Noto Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
   --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
   color-scheme:light;
 }
@@ -50,13 +51,13 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .num{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
 
 /* 상단 */
-.top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
-.top h1{font-family:var(--font-display);font-weight:800;font-size:24px;letter-spacing:-.01em}
+.top{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:10px 12px;margin-bottom:14px}
+.top h1{font-family:var(--font-title);font-weight:700;font-size:36px;line-height:1.15;letter-spacing:-.035em;white-space:nowrap}
 .top p{margin:2px 0 0;color:var(--muted);font-size:13px}
 .mkt{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px 6px 8px;display:flex;align-items:center;gap:8px;font-size:13px;white-space:nowrap}
 .mkt .dot{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px;font-family:var(--font-mono)}
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px;position:sticky;top:0;background:var(--bg);z-index:5;padding-top:4px}
-.tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px;min-height:44px;font-weight:500;color:var(--muted)}
+.tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:10px 12px;min-height:44px;font-weight:500;color:var(--muted)}
 .tabs button[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:700}
 
 /* 색 */
@@ -122,7 +123,7 @@ h3{font-size:16px;margin-bottom:8px}
 
 /* 폼 */
 label{display:block;font-weight:500;margin:12px 0 4px;font-size:14px}
-input[type=text],textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px}
+input[type=text],input[type=password],textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px}
 textarea{min-height:200px;font-family:var(--font-mono);font-size:12.5px;line-height:1.4}
 .note{font-size:13px;color:var(--muted);margin:6px 0}
 .err{color:var(--s4);font-size:14px;margin:10px 0;font-weight:500}
@@ -138,11 +139,24 @@ textarea{min-height:200px;font-family:var(--font-mono);font-size:12.5px;line-hei
 table.p{width:100%;border-collapse:collapse;font-size:13.5px}
 table.p td{padding:6px 4px;border-top:1px solid var(--line)}
 table.p td:last-child{text-align:right;font-family:var(--font-mono)}
+.resrow{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line)}
+.resrow:first-of-type{border-top:0}
+.reslist{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:4px 12px;font-size:13px;min-height:32px}
+.pre{white-space:pre-wrap;word-break:break-all;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;font-family:var(--font-mono);font-size:12px;margin:10px 0 0}
+input[type=checkbox]{width:18px;height:18px;vertical-align:middle;margin-right:8px}
+.candhead{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin-bottom:6px}
+.candhead b{font-size:16px}
+.candnums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.candnums div{background:var(--bg);border-radius:8px;padding:6px 8px}
+.candnums small{display:block;color:var(--muted);font-size:11.5px}
+.candnums b{font-family:var(--font-mono);font-weight:500;font-size:14px}
+a{color:var(--accent)}
 .foot{font-size:12px;color:var(--muted);margin-top:18px}
 details summary{cursor:pointer;font-weight:500;min-height:36px;display:flex;align-items:center}
 .back{margin-bottom:12px}
 @media (prefers-reduced-motion:no-preference){.row{transition:border-color .15s}}
-@media (max-width:420px){.hero .big{font-size:46px}.top h1{font-size:21px}}
+@media (max-width:420px){.hero .big{font-size:46px}.top h1{font-size:32px}}
 </style>
 </head>
 <body>
@@ -211,6 +225,10 @@ function parseInput(text){
     raw.push({ts,c,v:isNaN(v)?0:v,h:isNaN(h)?c:h,l:isNaN(l)?c:l});
   }
   if(raw.length<10)throw new Error('읽은 행이 '+raw.length+'개뿐입니다. 날짜 형식(예: 2026-11-13)과 종가 열을 확인해 주세요.');
+  return buildWeekly(raw);
+}
+function buildWeekly(raw){
+  if(raw.length<10)throw new Error('시세가 '+raw.length+'개뿐입니다.');
   raw.sort((a,b)=>a.ts-b.ts);
   const gaps=[];for(let i=1;i<raw.length;i++)gaps.push((raw[i].ts-raw[i-1].ts)/DAY);
   gaps.sort((a,b)=>a-b);
@@ -223,7 +241,56 @@ function parseInput(text){
   }
   const rows=[...map.values()].sort((a,b)=>a.d-b.d).map(({d,h,l,c,v})=>({d,h,l,c,v}));
   if(rows.length<40)throw new Error('주봉으로 '+rows.length+'주치입니다. 30주 이동평균과 기울기를 보려면 최소 40주, 권장 60주 이상이 필요합니다.');
-  return rows;
+  return rows.slice(-400);
+}
+
+function toTs(v){
+  if(typeof v==='number'){
+    if(v>=1e11)return v;
+    if(v>=1e9)return v*1000;
+    v=String(Math.round(v));
+  }
+  return parseDate(String(v));
+}
+function findName(j){
+  if(!j||typeof j!=='object')return '';
+  for(const k of ['name','stockName','stock_name','hts_kor_isnm','itemName','korName']){if(typeof j[k]==='string'&&j[k].trim())return j[k].trim();}
+  for(const k of ['output','info','meta','data']){if(j[k]&&typeof j[k]==='object'&&!Array.isArray(j[k])){const n=findName(j[k]);if(n)return n;}}
+  return '';
+}
+function normHistory(json){
+  let arr=Array.isArray(json)?json:null;
+  const scan=o=>{for(const k in o){if(Array.isArray(o[k])&&o[k].length)return o[k];}return null;};
+  if(!arr&&json&&typeof json==='object'){
+    for(const k of ['rows','data','items','history','candles','prices','list','output2','result','output']){
+      const v=json[k];
+      if(Array.isArray(v)&&v.length){arr=v;break;}
+      if(v&&typeof v==='object'&&!Array.isArray(v)){arr=scan(v);if(arr)break;}
+    }
+    if(!arr)arr=scan(json);
+  }
+  if(!arr||!arr.length)throw new Error('응답에서 시세 목록을 찾지 못했습니다.');
+  const pick=(o,ns)=>{for(const n of ns){if(o[n]!=null&&o[n]!=='')return o[n];}return undefined;};
+  const raw=[];
+  for(const o of arr){
+    let ts,c,h,l,v;
+    if(Array.isArray(o)){
+      if(o.length<6)continue;
+      ts=toTs(o[0]);h=parseNum(o[2]);l=parseNum(o[3]);c=parseNum(o[4]);v=parseNum(o[5]);
+    }else if(o&&typeof o==='object'){
+      const d=pick(o,['date','d','day','time','t','ymd','stck_bsop_date','xymd','base_date','dt','x','localDate','tradeDate']);
+      if(d===undefined)continue;
+      ts=toTs(d);
+      c=parseNum(pick(o,['close','c','clpr','stck_clpr','price','closePrice','last','종가']));
+      h=parseNum(pick(o,['high','h','hgpr','stck_hgpr','highPrice','고가']));
+      l=parseNum(pick(o,['low','l','lwpr','stck_lwpr','lowPrice','저가']));
+      v=parseNum(pick(o,['volume','v','vol','acml_vol','trdVol','quantity','거래량']));
+    }else continue;
+    if(isNaN(ts)||isNaN(c)||c<=0)continue;
+    raw.push({ts,c,v:isNaN(v)?0:v,h:isNaN(h)?c:h,l:isNaN(l)?c:l});
+  }
+  if(raw.length<10)throw new Error('읽을 수 있는 시세가 '+raw.length+'개뿐입니다.');
+  return buildWeekly(raw);
 }
 
 const FLAT=1.5, EXT_OK=15, EXT_HOT=30, BRK_MIN=1.02, VOL_X=2;
@@ -367,12 +434,20 @@ const MKT_ADVICE={
 };
 const SIGORD={buy:0,watch:1,hold:2,hot:3,wait:4,reduce:5,avoid:6};
 
-let state={market:null,stocks:[],sel:null,tab:'stocks',form:null,settings:{capital:50000000,riskPct:1},booted:false};
+const CANDS={date:'2026-11-12',src:'갭 돌파 리스트 (GitHub chkchp0702-spec/Gap)',url:'https://github.com/chkchp0702-spec/Gap/issues/81',
+  rule:'최근 3거래일 안에 52주 신고가를 냈고 상대강도가 70 이상인 종목',
+  items:[
+    {name:'디케이락',code:'105740',mkt:'코스닥',sector:'금속가공',price:13480,hi:'2년',vol:2.2,d5:9.6,rs:94},
+    {name:'타이거일렉',code:'219130',mkt:'코스닥',sector:'분류 없음',price:107100,hi:'2년',vol:1.4,d5:13.7,rs:98},
+    {name:'롯데렌탈',code:'089860',mkt:'코스피',sector:'임대·리스',price:58400,hi:'2년',vol:0.4,d5:10.0,rs:96}
+  ]};
+let state={market:null,stocks:[],sel:null,tab:'stocks',form:null,settings:{capital:50000000,riskPct:1},booted:false,busy:'',lastRefresh:null,
+  conn:{url:'https://kkm-mwrc.onrender.com',secret:'',mode:'h:x-app-secret',days:1100,mktCode:'069500',auto:true}};
 let cache={mkt:null,list:{}};
-let view=null,hoverI=null,formErr='',ioMsg='';
+let view=null,hoverI=null,formErr='',ioMsg='',connMsg='',refreshErr='';
 
-function load(){try{const s=JSON.parse(localStorage.getItem(LS_KEY));if(s){state.market=s.market||null;state.stocks=s.stocks||[];state.settings=Object.assign(state.settings,s.settings||{});state.booted=!!s.booted;}}catch(e){}}
-function save(){try{localStorage.setItem(LS_KEY,JSON.stringify({market:state.market,stocks:state.stocks,settings:state.settings,booted:true}));}catch(e){}}
+function load(){try{const s=JSON.parse(localStorage.getItem(LS_KEY));if(s){state.market=s.market||null;state.stocks=s.stocks||[];state.settings=Object.assign(state.settings,s.settings||{});state.booted=!!s.booted;if(s.conn)state.conn=Object.assign(state.conn,s.conn);state.lastRefresh=s.lastRefresh||null;}}catch(e){}}
+function save(){try{localStorage.setItem(LS_KEY,JSON.stringify({market:state.market,stocks:state.stocks,settings:state.settings,booted:true,conn:state.conn,lastRefresh:state.lastRefresh}));}catch(e){}}
 function uid(){return 'x'+Math.random().toString(36).slice(2,9);}
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 function fmtP(p){return p>=1000?Math.round(p).toLocaleString('ko-KR'):p>=100?p.toFixed(1):p.toFixed(2);}
@@ -399,7 +474,7 @@ function headerHTML(){
 }
 function tabsHTML(){
   const t=(k,l)=>`<button data-act="tab" data-id="${k}" ${state.tab===k&&!state.form?'aria-current="page"':''}>${l}</button>`;
-  return `<nav class="tabs">${t('stocks','종목')}${t('market','시장')}${t('rules','규칙')}</nav>`;
+  return `<nav class="tabs">${t('stocks','종목')}${t('cand','후보')}${t('market','시장')}${t('conn','연결')}${t('rules','규칙')}</nav>`;
 }
 function sparkSVG(rows,A){
   const N=Math.min(52,rows.length),off=rows.length-N,pts=rows.slice(off).map(r=>r.c);
@@ -417,12 +492,13 @@ function listHTML(){
     return `<button class="row s${A.stage}" data-act="open" data-id="${s.id}">
       <span class="badge">${A.stage}</span>
       <span><span class="name">${esc(s.name)}${s.ex?'<span class="tag">예시</span>':''}</span>
-      <span class="sub"><span class="num">${fmtP(A.price)}</span><span class="num">30주선 ${fmtPct(A.ext)}</span><span>체크 <span class="num">${A.score}/8</span></span></span></span>
+      <span class="sub">${s.code?`<span class="num">${esc(s.code)}</span>`:''}<span class="num">${fmtP(A.price)}</span><span class="num">30주선 ${fmtPct(A.ext)}</span><span>체크 <span class="num">${A.score}/8</span></span></span></span>
       <span class="right"><span class="sig ${A.sig.k}">${A.sig.t.split(' · ')[0]}</span>${sparkSVG(s.rows,A)}</span></button>`;
   }).join('');
   const hasEx=state.stocks.some(s=>s.ex)||(state.market&&state.market.ex);
-  return `<div class="bar"><button class="btn primary" data-act="add-stock">종목 추가</button>
+  return `<div class="bar"><button class="btn primary" data-act="add-stock">종목 추가</button><button class="btn" data-act="add-bulk">코드로 일괄 추가</button><button class="btn" data-act="refresh-all" ${state.busy?'disabled':''}>전체 새로고침</button>
     <button class="btn" data-act="load-ex">예시 불러오기</button>${hasEx?'<button class="btn" data-act="clear-ex">예시 지우기</button>':''}</div>
+    ${statusHTML()}${!state.busy&&state.lastRefresh?`<p class="note">마지막 새로고침 ${esc(new Date(state.lastRefresh).toLocaleString('ko-KR'))}</p>`:''}${resultsHTML(items)}
     ${items.length?`<div class="summary">${sum}</div><div class="list">${rows}</div>`:`<div class="card"><h3>등록된 종목이 없습니다</h3><p class="note">종목 추가에서 일봉 또는 주봉 표를 붙여넣으면 현재 단계와 매수·매도 신호를 계산합니다.</p></div>`}
     <details class="card" style="margin-top:14px"><summary>백업과 복원</summary>
       <p class="note">데이터는 이 브라우저에만 저장됩니다. 다른 기기로 옮기려면 아래 텍스트를 복사해 두었다가 붙여넣어 가져오세요.</p>
@@ -430,6 +506,17 @@ function listHTML(){
       <div class="bar" style="margin:8px 0 0"><button class="btn small" data-act="export">백업 만들기</button><button class="btn small" data-act="copy-io">복사</button><button class="btn small" data-act="import">가져오기</button></div>
       ${ioMsg?`<p class="note">${esc(ioMsg)}</p>`:''}</details>
     <p class="foot">이 앱은 책의 규칙을 기계적으로 적용한 참고용 도구이며, 투자 판단과 책임은 본인에게 있습니다.</p>`;
+}
+function statusHTML(){return (state.busy?`<p class="note" role="status">${esc(state.busy)}</p>`:'')+(refreshErr?`<p class="err">${esc(refreshErr)}</p>`:'');}
+function resultsHTML(items){
+  const ok=items.filter(x=>!x.A.err);
+  if(!ok.length)return '';
+  const grp=[['buy','매수 적기'],['watch','돌파 대기'],['hold','보유'],['hot','과열'],['wait','관망'],['reduce','비중 축소'],['avoid','매수 금지']];
+  const mk=cache.mkt&&!cache.mkt.err?cache.mkt:null;
+  const lines=grp.map(([k,l])=>{const g=ok.filter(x=>x.A.sig.k===k);if(!g.length)return '';
+    return `<div class="resrow"><span class="sig ${k}">${l} ${g.length}</span><span class="reslist">${g.map(x=>`<button class="chip" data-act="open" data-id="${x.s.id}">${esc(x.s.name)}</button>`).join('')}</span></div>`;}).join('');
+  const warn=mk&&mk.stage>=3?`<p class="note"><b>시장 ${mk.stage}단계</b>: 규칙상 신규 매수를 보류하는 구간입니다.</p>`:'';
+  return `<div class="card"><h3>오늘의 결과 <span class="score">${ok.length}종목</span></h3>${warn}${lines}</div>`;
 }
 function heroHTML(name,A,isMkt){
   const st=STAGE[A.stage];
@@ -488,22 +575,32 @@ function detailHTML(id){
 function marketHTML(){
   const m=state.market,A=cache.mkt;
   if(!m)return `<div class="card"><h3>시장 지수를 등록하세요</h3><p class="note">코스피, 코스닥, S&amp;P 500 같은 지수의 일봉 또는 주봉을 붙여넣으면 시장 단계를 판정하고, 종목의 상대강도와 매수 체크리스트에 반영합니다.</p></div>
-    <div class="bar"><button class="btn primary" data-act="add-market">시장 지수 등록</button><button class="btn" data-act="load-ex">예시 불러오기</button></div>`;
+    <div class="bar"><button class="btn primary" data-act="fetch-market" ${state.busy?'disabled':''}>자동 조회</button><button class="btn" data-act="add-market">직접 등록</button><button class="btn" data-act="load-ex">예시 불러오기</button></div>`;
   if(!A||A.err)return `<div class="card"><p class="err">${esc(A?A.err:'분석 실패')}</p></div><div class="bar"><button class="btn" data-act="add-market">다시 등록</button></div>`;
   view={rows:m.rows,A};
-  return heroHTML(m.name,A,true)+chartHTML(A,false)+
+  return statusHTML()+heroHTML(m.name,A,true)+chartHTML(A,false)+
     `<div class="tiles">
       <div class="tile"><small>현재가</small><b>${fmtP(A.price)}</b><em>${fmtDate(A.date)} 주</em></div>
       <div class="tile"><small>30주선 대비</small><b>${fmtPct(A.ext)}</b><em>30주선 ${fmtP(A.maNow)}</em></div>
       <div class="tile"><small>30주선 기울기(10주)</small><b>${fmtPct(A.s10)}</b><em>${A.s10>1.5?'우상향':A.s10<-1.5?'우하향':'평평'}</em></div>
       <div class="tile"><small>52주 고점 대비</small><b>${A.distHi<=0?'신고가권':'-'+(A.distHi/(1+A.distHi/100)).toFixed(1)+'%'}</b></div></div>
-    <div class="bar"><button class="btn" data-act="add-market">지수 데이터 갱신</button><button class="btn danger" data-act="del-market">지수 삭제</button></div>`;
+    <div class="bar"><button class="btn primary" data-act="fetch-market" ${state.busy?'disabled':''}>자동 조회</button><button class="btn" data-act="add-market">지수 데이터 갱신</button><button class="btn danger" data-act="del-market">지수 삭제</button></div>`;
+}
+function bulkHTML(){
+  return `<div class="card"><h3>종목코드로 일괄 추가</h3>
+    <p class="note">6자리 종목코드를 쉼표, 공백, 줄바꿈으로 구분해 넣으세요. 서버에서 주봉을 받아 한 번에 등록합니다. 이름을 못 받으면 코드가 이름으로 들어가며, 종목 상세의 데이터 갱신에서 바꿀 수 있습니다.</p>
+    <label for="f-codes">종목코드</label><textarea id="f-codes" style="min-height:120px" placeholder="005930, 000660&#10;035420"></textarea>
+    ${formErr?`<p class="err">${esc(formErr)}</p>`:''}
+    <div class="bar" style="margin-top:12px"><button class="btn primary" data-act="save-form">조회하고 추가</button><button class="btn" data-act="cancel-form">취소</button></div></div>`;
 }
 function formHTML(){
+  if(state.form.mode==='bulk')return bulkHTML();
   const f=state.form,isM=f.mode==='market';
   const cur=f.id?state.stocks.find(x=>x.id===f.id):(isM?state.market:null);
   return `<div class="card"><h3>${isM?'시장 지수':'종목'} ${cur?'데이터 갱신':'추가'}</h3>
-    <label for="f-name">${isM?'지수 이름':'종목명'}</label><input type="text" id="f-name" value="${esc(cur?cur.name:'')}" placeholder="${isM?'예: 코스피':'예: 삼성전자'}">
+    <label for="f-name">${isM?'지수 이름':'종목명'}</label><input type="text" id="f-name" value="${esc(cur?cur.name:(f.prefill?f.prefill.name:''))}" placeholder="${isM?'예: 코스피':'예: 삼성전자'}">
+    <label for="f-code">종목코드 (선택)</label><input type="text" id="f-code" value="${esc(cur&&cur.code?cur.code:(f.prefill?f.prefill.code:''))}" placeholder="${isM?'예: 069500':'예: 005930'}">
+    <p class="note">코드를 넣고 아래 데이터를 비워 두면 서버에서 주봉을 자동으로 받아옵니다. 데이터를 붙여넣으면 붙여넣은 데이터를 씁니다.</p>
     <label for="f-data">가격 데이터 붙여넣기</label>
     <textarea id="f-data" placeholder="날짜,종가,거래량&#10;2026-11-13,58300,12000000&#10;2026-11-12,57900,9800000&#10;..."></textarea>
     <label for="f-file">또는 파일 선택 (CSV, TXT)</label><input type="file" id="f-file" accept=".csv,.txt,.tsv,text/plain,text/csv">
@@ -533,13 +630,198 @@ function rulesHTML(){
     <p class="note">위 숫자는 이 앱이 정한 기준값이며, 책의 규칙을 기계적으로 옮긴 것입니다. 판정이 차트의 인상과 다르면 차트를 우선해서 판단하세요.</p></div>`;
 }
 
+/* ---------- 시세 서버 ---------- */
+const MODES=['h:x-app-secret','h:x-shared-secret','h:x-api-key','b:','q:secret','q:key','q:appSecret','n:'];
+function buildReq(path,mode){
+  const c=state.conn,base=c.url.trim().replace(/\/+$/,'');
+  let url=base+path;const headers={};
+  const parts=String(mode||'n:').split(':'),t=parts[0],name=parts.slice(1).join(':');
+  if(t==='h'&&c.secret&&name)headers[name]=c.secret;
+  else if(t==='b'&&c.secret)headers['Authorization']='Bearer '+c.secret;
+  else if(t==='q'&&c.secret&&name)url+=(url.includes('?')?'&':'?')+encodeURIComponent(name)+'='+encodeURIComponent(c.secret);
+  return {url,headers};
+}
+async function httpJSON(path,mode,timeoutMs){
+  const {url,headers}=buildReq(path,mode);
+  const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),timeoutMs||70000);
+  try{
+    const r=await fetch(url,{headers,signal:ctl.signal});
+    const txt=await r.text();
+    let j=null;try{j=JSON.parse(txt);}catch(e){}
+    if(!r.ok){const e=new Error('HTTP '+r.status+(j&&j.error?' '+j.error:''));e.status=r.status;throw e;}
+    if(j==null)throw new Error('JSON이 아닌 응답입니다.');
+    return j;
+  }finally{clearTimeout(tm);}
+}
+async function fetchWeekly(code){
+  const c=state.conn;
+  if(!c.url||!c.secret)throw new Error('연결 탭에서 서버 주소와 비밀키를 먼저 입력하세요.');
+  const path='/stock-history/'+encodeURIComponent(code)+'?period=W&days='+(c.days||1100);
+  let j;
+  try{j=await httpJSON(path,c.mode);}
+  catch(e){
+    if(e.name==='AbortError')throw new Error('서버 응답이 늦습니다. 서버가 깨어나는 중일 수 있으니 잠시 뒤 다시 시도하세요.');
+    if(e.status===401||e.status===403)throw new Error('비밀키가 맞지 않습니다. 연결 탭에서 다시 테스트하세요.');
+    if(e instanceof TypeError)throw new Error('서버에 연결하지 못했습니다. 주소와 인터넷 연결, 서버의 허용 주소 설정을 확인하세요.');
+    throw e;
+  }
+  return {rows:normHistory(j),name:findName(j)};
+}
+function connHTML(){
+  const c=state.conn;
+  return `<div class="card"><h3>시세 서버 연결</h3>
+    <p class="note">기존 KIS 프록시에서 주봉을 받아옵니다. 이 기능은 GitHub Pages처럼 직접 올린 주소에서 동작합니다. 비밀키는 이 브라우저에만 저장됩니다.</p>
+    <label for="c-url">프록시 서버 주소</label><input type="text" id="c-url" value="${esc(c.url)}" placeholder="https://your-proxy.onrender.com">
+    <label for="c-secret">서버 비밀키 (APP_SHARED_SECRET과 동일하게)</label><input type="password" id="c-secret" value="${esc(c.secret)}" autocomplete="off">
+    <label for="c-mkt">시장 지수 대용 종목코드</label><input type="text" id="c-mkt" value="${esc(c.mktCode)}" placeholder="069500">
+    <p class="note">지수 대신 지수를 따라가는 ETF를 시장으로 씁니다. 기본은 KODEX 200(069500)이고, 코스닥 위주라면 KODEX 코스닥150(229200)으로 바꿀 수 있습니다.</p>
+    <label for="c-days">불러올 기간 (일)</label><input type="text" id="c-days" inputmode="numeric" value="${c.days}">
+    <label for="c-auto" style="font-weight:400"><input type="checkbox" id="c-auto" ${c.auto?'checked':''}>앱을 열 때 자동 새로고침</label>
+    <details><summary>고급: 비밀키 전달 방식</summary>
+      <p class="note">연결 테스트가 가능한 방식을 자동으로 찾아 저장합니다. 직접 지정하려면 h:헤더이름, q:쿼리이름, b:(Bearer), n:(없음) 형식으로 입력하세요.</p>
+      <label for="c-mode">전달 방식</label><input type="text" id="c-mode" value="${esc(c.mode)}"></details>
+    <div class="bar" style="margin-top:12px"><button class="btn primary" data-act="conn-test" ${state.busy?'disabled':''}>저장하고 연결 테스트</button></div>
+    ${statusHTML()}${connMsg?`<pre class="pre">${esc(connMsg)}</pre>`:''}</div>`;
+}
+async function testConn(){
+  if(state.busy)return;
+  const c=state.conn;
+  c.url=$('#c-url').value.trim();c.secret=$('#c-secret').value.trim();c.mktCode=$('#c-mkt').value.trim()||'069500';
+  const d=parseInt(String($('#c-days').value).replace(/\D/g,''),10);c.days=d>0?Math.min(d,3000):1100;
+  c.auto=$('#c-auto').checked;
+  const custom=$('#c-mode').value.trim();
+  save();
+  if(!c.url||!c.secret){connMsg='서버 주소와 비밀키를 입력하세요.';render();return;}
+  const modes=[custom,...MODES].filter((m,i,a)=>m&&a.indexOf(m)===i);
+  const path='/stock-history/005930?period=W&days='+Math.min(c.days,700);
+  const log=[];connMsg='';refreshErr='';
+  for(let i=0;i<modes.length;i++){
+    const m=modes[i];
+    state.busy='연결 테스트 중 ('+(i+1)+'/'+modes.length+') · 서버가 잠들어 있으면 1분 가까이 걸릴 수 있습니다.';render();
+    let j;
+    try{j=await httpJSON(path,m,i===0?70000:25000);}
+    catch(e){log.push(m+' → '+(e.name==='AbortError'?'시간 초과':(e instanceof TypeError?'연결 실패':(e.message||'실패'))));continue;}
+    c.mode=m;save();
+    try{
+      const rows=normHistory(j),L=rows[rows.length-1];
+      log.unshift('성공: 비밀키 전달 방식 '+m,'주봉 '+rows.length+'개 ('+fmtDate(rows[0].d)+' ~ '+fmtDate(L.d)+')','마지막 종가 '+fmtP(L.c)+(L.v?', 거래량 '+Math.round(L.v).toLocaleString('ko-KR'):', 거래량 없음'));
+    }catch(e){
+      log.unshift('서버는 응답했지만 시세 형식을 읽지 못했습니다: '+e.message,'전달 방식 '+m+' 저장됨','응답 앞부분:',JSON.stringify(j).slice(0,500));
+    }
+    state.busy='';connMsg=log.join('\n');render();return;
+  }
+  state.busy='';
+  connMsg=log.join('\n')+'\n\n모든 방식이 실패했습니다. 주소와 비밀키를 확인하고, 서버가 비밀키를 읽는 방식(APP_SHARED_SECRET 검색 결과)을 알려 주세요.';
+  render();
+}
+async function refreshOne(s){
+  const r=await fetchWeekly(s.code);
+  s.rows=r.rows;s.ex=false;if(r.name&&(!s.name||s.name===s.code))s.name=r.name;
+}
+async function refreshAll(silent){
+  if(state.busy)return;
+  const list=state.stocks.filter(s=>s.code&&!s.ex),mk=state.market&&state.market.code&&!state.market.ex;
+  const total=list.length+(mk?1:0);
+  if(!total){if(!silent){refreshErr='종목코드가 있는 종목이 없습니다. 종목을 코드로 추가하세요.';render();}return;}
+  if(!state.conn.url||!state.conn.secret){if(!silent){refreshErr='연결 탭에서 서버 주소와 비밀키를 먼저 입력하세요.';render();}return;}
+  const errs=[];let i=0;refreshErr='';
+  const step=async(fn,label)=>{i++;state.busy='시세 조회 중 '+i+'/'+total+' · '+label;if(state.tab==='stocks'&&!state.sel&&!state.form)render();
+    try{await fn();}catch(e){errs.push(label+': '+e.message);}};
+  if(mk)await step(async()=>{const r=await fetchWeekly(state.market.code);state.market.rows=r.rows;},state.market.name);
+  for(const s of list)await step(()=>refreshOne(s),s.name);
+  state.busy='';state.lastRefresh=Date.now();refreshErr=errs.slice(0,4).join(' / ');
+  save();recompute();render();
+}
+async function fetchMarket(){
+  if(state.busy)return;
+  const code=(state.conn.mktCode||'069500');
+  state.busy='시장 지수 조회 중…';refreshErr='';render();
+  try{
+    const r=await fetchWeekly(code);
+    const keep=state.market&&state.market.code===code&&!state.market.ex;
+    state.market={name:keep?state.market.name:'시장 ('+code+')',code,rows:r.rows};save();
+  }catch(e){refreshErr=e.message;}
+  state.busy='';recompute();render();
+}
+async function saveBulk(){
+  if(state.busy)return;
+  const codes=[...new Set($('#f-codes').value.split(/[\s,;]+/).map(x=>x.trim().toUpperCase()).filter(Boolean))];
+  if(!codes.length){formErr='종목코드를 입력하세요.';render();$('#f-codes').focus();return;}
+  const have=new Set(state.stocks.map(s=>s.code)),errs=[];
+  state.form=null;state.tab='stocks';state.sel=null;formErr='';refreshErr='';
+  for(let i=0;i<codes.length;i++){
+    const cd=codes[i];if(have.has(cd))continue;
+    state.busy='종목 추가 중 '+(i+1)+'/'+codes.length+' · '+cd;render();
+    try{const r=await fetchWeekly(cd);state.stocks.push({id:uid(),name:r.name||cd,code:cd,rows:r.rows});}
+    catch(e){errs.push(cd+': '+e.message);}
+  }
+  state.busy='';refreshErr=errs.slice(0,4).join(' / ');save();recompute();render();
+}
+
+function candChecks(c,A){
+  const mk=cache.mkt&&!cache.mkt.err?cache.mkt:null,ck=[];
+  const add=(label,st,detail)=>ck.push({label,st,detail});
+  add('위쪽 매물대가 없는가','pass',c.hi+' 신고가권');
+  add('상대강도가 높은가','pass','상대강도 '+c.rs+' (외부 지표, 70 이상 선별)');
+  add('돌파 때 거래량이 평균의 2배 이상인가',c.vol>=2?'pass':'fail','거래량 '+c.vol.toFixed(1)+'배');
+  add('단기 과열이 아닌가',c.d5>=10?'warn':'pass','5일 '+fmtPct(c.d5)+(c.d5>=10?' · 30주선과 거리 확인 필요':''));
+  if(A&&!A.err)add('30주선 위 2단계인가',A.stage===2?'pass':'fail','앱 판정 '+A.stage+'단계 · 30주선 대비 '+fmtPct(A.ext)+' · 기울기 '+fmtPct(A.s10));
+  else add('30주선 위 2단계인가','unk','앱에서 분석하면 계산합니다');
+  add('시장 지수가 상승 단계인가',mk?(mk.stage===2?'pass':mk.stage===1?'warn':'fail'):'unk',mk?'시장 '+mk.stage+'단계'+(mk.stage>=3?' · 신규 매수 보류 구간':''):'시장 탭에서 지수를 등록하세요');
+  return ck;
+}
+function candHTML(){
+  const L={pass:'충족',fail:'미충족',warn:'주의',unk:'확인불가'};
+  const mk=cache.mkt&&!cache.mkt.err?cache.mkt:null;
+  const cards=CANDS.items.map(c=>{
+    const s=state.stocks.find(x=>x.code===c.code),A=s?cache.list[s.id]:null,ck=candChecks(c,A);
+    const pass=ck.filter(x=>x.st==='pass').length;
+    const verdict=A&&!A.err?`<span class="sig ${A.sig.k}">앱 판정 ${A.stage}단계 · ${A.sig.t.split(' · ')[0]}</span>`:`<span class="sig wait">앱 분석 전</span>`;
+    return `<div class="card"><div class="candhead"><div><b>${esc(c.name)}</b> <span class="num">${c.code}</span><br><span class="note">${c.mkt} · ${esc(c.sector)}</span></div>${verdict}</div>
+      <div class="candnums"><div><small>현재가</small><b>${c.price.toLocaleString('ko-KR')}</b></div><div><small>신고가</small><b>${c.hi}</b></div><div><small>거래량</small><b>${c.vol.toFixed(1)}배</b></div>
+      <div><small>5일</small><b>${fmtPct(c.d5)}</b></div><div><small>상대강도</small><b>${c.rs}</b></div><div><small>체크</small><b>${pass}/${ck.length}</b></div></div>
+      <ul class="checks">${ck.map(x=>`<li><span class="pill ${x.st}">${L[x.st]}</span><div><b>${x.label}</b><span class="d">${esc(x.detail)}</span></div></li>`).join('')}</ul>
+      <div class="bar" style="margin:12px 0 0">${s?`<button class="btn primary" data-act="cand-open" data-id="${c.code}">앱 분석 보기</button>`:`<button class="btn primary" data-act="cand-add" data-id="${c.code}" ${state.busy?'disabled':''}>앱에서 분석</button>`}</div></div>`;
+  }).join('');
+  const all=CANDS.items.every(c=>state.stocks.some(s=>s.code===c.code));
+  return `<div class="card"><h3>신고가 후보 <span class="score">${esc(CANDS.date)} 기준</span></h3>
+    <p class="note">${esc(CANDS.rule)}입니다. 한국 시장에서 이 조건을 통과한 종목은 ${CANDS.items.length}개뿐이었습니다. 외부 스크리닝 결과라 정확도는 확인되지 않았습니다.</p>
+    ${mk&&mk.stage>=3?`<p class="note"><b>시장 ${mk.stage}단계</b>: 책의 규칙으로는 신규 매수를 보류하는 구간이라 관찰용으로만 보세요.</p>`:''}
+    ${all?'':`<div class="bar" style="margin:8px 0 0"><button class="btn" data-act="cand-all" ${state.busy?'disabled':''}>${CANDS.items.length}종목 모두 분석에 추가</button></div>`}
+    ${statusHTML()}
+    <p class="note">출처: <a href="${CANDS.url}" rel="noopener">${esc(CANDS.src)}</a></p></div>${cards}
+    <p class="foot">참고용 정보이며 투자 권유가 아닙니다.</p>`;
+}
+async function addCodes(codes){
+  if(state.busy)return;
+  const have=new Set(state.stocks.map(s=>s.code)),errs=[],nm={};CANDS.items.forEach(x=>{nm[x.code]=x.name;});
+  if(!state.conn.url||!state.conn.secret){refreshErr='연결 탭에서 서버 주소와 비밀키를 먼저 입력하세요.';render();return;}
+  state.tab='cand';refreshErr='';
+  for(let i=0;i<codes.length;i++){
+    const cd=codes[i];if(have.has(cd))continue;
+    state.busy='종목 추가 중 '+(i+1)+'/'+codes.length+' · '+(nm[cd]||cd);render();
+    try{const r=await fetchWeekly(cd);state.stocks.push({id:uid(),name:nm[cd]||r.name||cd,code:cd,rows:r.rows});}
+    catch(e){errs.push((nm[cd]||cd)+': '+e.message);}
+  }
+  state.busy='';refreshErr=errs.slice(0,4).join(' / ');save();recompute();render();
+}
+async function addCandidate(code){
+  const c=CANDS.items.find(x=>x.code===code);if(!c)return;
+  if(!state.conn.url||!state.conn.secret){state.tab='stocks';state.sel=null;state.form={mode:'stock',prefill:{name:c.name,code:c.code}};formErr='';render();window.scrollTo(0,0);return;}
+  await addCodes([code]);
+  const s=state.stocks.find(x=>x.code===code);
+  if(s&&!refreshErr){state.tab='stocks';state.sel=s.id;render();window.scrollTo(0,0);}
+}
+
 /* ---------- 렌더 ---------- */
 function render(){
   view=null;hoverI=null;
   let body;
   if(state.form)body=formHTML();
   else if(state.tab==='stocks')body=state.sel?detailHTML(state.sel):listHTML();
+  else if(state.tab==='cand')body=candHTML();
   else if(state.tab==='market')body=marketHTML();
+  else if(state.tab==='conn')body=connHTML();
   else body=rulesHTML();
   $('#app').innerHTML=headerHTML()+tabsHTML()+body;
   drawAll();
@@ -617,6 +899,13 @@ document.addEventListener('click',e=>{
   else if(act==='back'){state.sel=null;render();}
   else if(act==='add-stock'){state.form={mode:'stock'};formErr='';render();}
   else if(act==='add-market'){state.form={mode:'market'};formErr='';render();}
+  else if(act==='add-bulk'){state.form={mode:'bulk'};formErr='';render();}
+  else if(act==='refresh-all'){refreshAll(false);}
+  else if(act==='fetch-market'){fetchMarket();}
+  else if(act==='conn-test'){testConn();}
+  else if(act==='cand-add'){addCandidate(id);}
+  else if(act==='cand-all'){addCodes(CANDS.items.map(x=>x.code));}
+  else if(act==='cand-open'){const s=state.stocks.find(x=>x.code===id);if(s){state.tab='stocks';state.sel=s.id;render();window.scrollTo(0,0);}}
   else if(act==='edit'){state.form={mode:'stock',id};formErr='';render();}
   else if(act==='cancel-form'){state.form=null;formErr='';render();}
   else if(act==='save-form'){saveForm();}
@@ -628,31 +917,37 @@ document.addEventListener('click',e=>{
   else if(act==='copy-io'){const t=$('#io');t.select();try{navigator.clipboard.writeText(t.value);}catch(err){}}
   else if(act==='import'){
     try{const o=JSON.parse($('#io').value);if(!o||!Array.isArray(o.stocks))throw 0;
-      if(o.market)state.market=o.market;o.stocks.forEach(s=>{if(s&&s.name&&Array.isArray(s.rows))state.stocks.push({id:uid(),name:s.name,rows:s.rows,ex:!!s.ex});});
+      if(o.market)state.market=o.market;o.stocks.forEach(s=>{if(s&&s.name&&Array.isArray(s.rows))state.stocks.push({id:uid(),name:s.name,code:s.code||'',rows:s.rows,ex:!!s.ex});});
       save();recompute();ioMsg='가져왔습니다.';render();}
     catch(err){ioMsg='백업 텍스트를 읽지 못했습니다.';const d=document.querySelector('details');render();const dd=document.querySelector('details');if(dd)dd.open=true;}
   }
 });
 async function saveForm(){
-  const f=state.form,name=$('#f-name').value.trim();let text=$('#f-data').value;
-  const file=$('#f-file').files[0];
+  const f=state.form;
+  if(f.mode==='bulk')return saveBulk();
+  if(state.busy)return;
+  let name=$('#f-name').value.trim(),text=$('#f-data').value;
+  const code=($('#f-code').value||'').trim().toUpperCase();
+  const file=$('#f-file').files[0],btn=$('[data-act="save-form"]');
   try{
-    if(!name)throw new Error('이름을 입력하세요.');
     if(!text.trim()&&file)text=await readFile(file);
     const cur=f.id?state.stocks.find(x=>x.id===f.id):(f.mode==='market'?state.market:null);
-    if(!text.trim()){
-      if(cur){cur.name=name;cur.ex=false;}else throw new Error('가격 데이터를 붙여넣거나 파일을 선택하세요.');
-    }else{
-      const rows=parseInput(text);
-      if(f.mode==='market')state.market={name,rows};
-      else if(f.id){const s=state.stocks.find(x=>x.id===f.id);s.name=name;s.rows=rows;s.ex=false;}
-      else state.stocks.push({id:uid(),name,rows});
-    }
-    save();recompute();state.form=null;formErr='';
+    let rows=null,apiName='';
+    if(text.trim())rows=parseInput(text);
+    else if(code){
+      if(btn){btn.disabled=true;btn.textContent='조회 중…';}
+      const r=await fetchWeekly(code);rows=r.rows;apiName=r.name;
+    }else if(!cur)throw new Error('가격 데이터를 붙여넣거나 종목코드를 입력하세요.');
+    if(!name)name=apiName||code;
+    if(!name)throw new Error('이름을 입력하세요.');
+    if(f.mode==='market')state.market={name,code:code||(cur&&cur.code)||'',rows:rows||cur.rows};
+    else if(f.id){const s=state.stocks.find(x=>x.id===f.id);s.name=name;s.code=code||s.code||'';if(rows)s.rows=rows;s.ex=false;}
+    else state.stocks.push({id:uid(),name,code,rows});
+    save();recompute();state.form=null;formErr='';refreshErr='';
     if(f.mode==='market'){state.tab='market';}else{state.tab='stocks';if(!f.id)state.sel=state.stocks[state.stocks.length-1].id;}
     render();window.scrollTo(0,0);
   }catch(err){formErr=err.message||'저장하지 못했습니다.';
-    const n=$('#f-name').value,d=$('#f-data').value;render();$('#f-name').value=n;$('#f-data').value=d;}
+    const n=$('#f-name').value,d=$('#f-data').value,cd=$('#f-code').value;render();$('#f-name').value=n;$('#f-data').value=d;$('#f-code').value=cd;}
 }
 document.addEventListener('input',e=>{
   if(e.target.id==='cap'){const v=parseNum(e.target.value);state.settings.capital=isNaN(v)?0:v;save();if(view)$('#calc-out').innerHTML=calcHTML(view.A);}
@@ -668,6 +963,7 @@ new MutationObserver(()=>drawAll()).observe(document.documentElement,{attributes
 load();
 if(!state.booted&&!state.stocks.length&&!state.market){addExamples();}
 recompute();render();
+if(state.conn.auto&&state.conn.url&&state.conn.secret&&state.stocks.some(s=>s.code&&!s.ex)&&(!state.lastRefresh||Date.now()-state.lastRefresh>30*60*1000))refreshAll(true);
 </script>
 </body>
 </html>
