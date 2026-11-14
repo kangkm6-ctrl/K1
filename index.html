@@ -846,7 +846,7 @@ function allHTML(){
   const info=sc?`스캔 ${esc(new Date(sc.ts).toLocaleString('ko-KR'))} · 대상 ${sc.total}종목 · 분석 ${sc.items.length}개${left?` · 남은 ${left}종목`:''}`:'아직 스캔하지 않았습니다.';
   const mine=state.stocks.filter(x=>x.code&&!(x.a&&x.a.length)).map(x=>all.find(e=>e.id===x.id)).filter(Boolean).sort((a,b)=>strongN(b)-strongN(a)||norm(b)-norm(a));
   return `<div class="card"><h3>세 전문가 공동 추천 <span class="score">${common.length}종목</span></h3>
-    <p class="note">와인스타인(30주선 2단계), 오닐(CAN SLIM 돌파), 미너비니(트렌드 템플릿)가 <b>모두</b> 매수권·관심·보유로 판정한 종목입니다. 매수 적기·관심이 많은 순으로 보여 주고, 종목을 누르면 전문가별 이유가 나옵니다.</p></div>
+    <p class="note">와인스타인(30주선 2단계), 오닐(CAN SLIM 돌파), 미너비니(트렌드 템플릿)가 <b>모두</b> 매수 적기·돌파 대기·보유처럼 매수나 보유 쪽으로 판정한 종목입니다(관망·과열·비중 축소·매수 금지는 뺍니다). 매수 적기·돌파 대기가 많은 순으로 보여 주고, 종목을 누르면 전문가별 이유가 나옵니다.</p></div>
     ${common.length?common.slice(0,10).map(e=>row(e,!!e.id)).join(''):'<div class="card"><p class="note">공동 추천 종목이 없습니다. 세 방식 조건이 모두 맞는 종목이 지금은 없거나, 스캔·종목 추가 전입니다.</p></div>'}
     ${two.length?`<details class="card"><summary>두 전문가 추천 <span class="score">${two.length}종목</span></summary>${two.map(e=>`<div class="resrow"><span class="mname"><b>${esc(e.n)}</b> <span class="num">${esc(e.c)}</span></span><span class="chips">${chips(e)}</span></div>`).join('')}</details>`:''}
     <div class="card"><h3>종목 추가 <span class="score">세 방식 공통</span></h3><p class="note">여기서 추가한 종목은 와인스타인·오닐·미너비니 목록에 모두 들어가고, 위 공동 추천 판정에도 반영됩니다.</p>
