@@ -77,6 +77,10 @@ h1,h2,h3{text-wrap:balance;margin:0}
 
 /* 색 */
 .s1{--c:var(--s1)} .s2{--c:var(--s2)} .s3{--c:var(--s3)} .s4{--c:var(--s4)}
+.mkt.s1,.mkt.s2,.mkt.s3,.mkt.s4{border-color:var(--c);background:var(--surface);background:color-mix(in srgb,var(--c) 16%,var(--surface));font-weight:700;color:var(--c);padding:3px 10px}
+.mkt .mi{font-size:15px;line-height:1}
+.tile.mt{border-color:var(--c);border-left-width:4px;background:var(--surface);background:color-mix(in srgb,var(--c) 12%,var(--surface))}
+.tile.mt b{color:var(--c)}
 .sig.buy{--c:var(--s2)} .sig.watch{--c:var(--accent)} .sig.hold{--c:var(--s2)} .sig.hot{--c:var(--s3)}
 .sig.wait{--c:var(--s1)} .sig.reduce{--c:var(--s3)} .sig.avoid{--c:var(--s4)}
 .sig{display:inline-block;border:1px solid var(--c);color:var(--c);background:color-mix(in srgb,var(--c) 10%,var(--surface));border-radius:6px;padding:2px 8px;font-size:12.5px;font-weight:700}
@@ -828,8 +832,8 @@ function whyHTML(e){
 }
 function allHTML(){
   const all=evalAll(),sc=state.scan;
-  const MS=[['와인스타인',cache.mkt&&!cache.mkt.err?{s:cache.mkt.stage,t:STAGE[cache.mkt.stage].n+' '+STAGE[cache.mkt.stage].name}:null],['오닐',cache.mO&&!cache.mO.err?{s:cache.mO.stage,t:cache.mO.label}:null],['미너비니',cache.mM&&!cache.mM.err?{s:cache.mM.stage,t:cache.mM.label}:null]];
-  const mk=MS.map(([n,m])=>`<div class="tile"><small>${n} 시장</small><b style="font-family:var(--font-body);font-size:13px">${m?esc(m.t):'지수 없음'}</b></div>`).join('');
+  const MS=[['와인스타인',cache.mkt&&!cache.mkt.err?{s:cache.mkt.stage,w:1,t:STAGE[cache.mkt.stage].n+' '+STAGE[cache.mkt.stage].name}:null],['오닐',cache.mO&&!cache.mO.err?{s:cache.mO.stage,t:cache.mO.label}:null],['미너비니',cache.mM&&!cache.mM.err?{s:cache.mM.stage,t:cache.mM.label}:null]];
+  const mk=MS.map(([n,m])=>`<div class="tile${m?' mt s'+m.s:''}"><small>${n} 시장</small><b style="font-family:var(--font-body);font-size:13px">${m?mkIcon(m.s,m.w)+' '+esc(m.t):'지수 없음'}</b></div>`).join('');
   const chips=e=>`<span class="sig ${e.w[0]===2?e.w[1]:'wait'}" title="와인스타인">와 ${e.w[0]}단계${e.w[0]===2?' '+SIGKO[e.w[1]]:''}</span> <span class="sig ${e.o[0]}" title="오닐">오 ${SIGKO[e.o[0]]}</span> <span class="sig ${e.m[0]}" title="미너비니">미 ${SIGKO[e.m[0]]}</span>`;
   const row=(e,mine)=>`<details class="card mrow2"><summary><span class="mname"><b>${esc(e.n)}</b> <span class="num">${esc(e.c)}</span></span><span class="num">${fmtP(e.p)}</span></summary>
     <p class="chips">${chips(e)}</p>${whyHTML(e)}
@@ -888,13 +892,15 @@ const EXPERT={
   oneil:{name:'윌리엄 오닐',short:'오닐',sub:'CAN SLIM · 컵·핸들 돌파'},
   mn:{name:'마크 미너비니',short:'미너비니',sub:'트렌드 템플릿 · VCP'}
 };
+const MK_ICON={w:{1:'➡️',2:'📈',3:'⚠️',4:'📉'},x:{2:'📈',1:'⚠️',4:'📉'}};
+function mkIcon(stage,wein){return (wein?MK_ICON.w:MK_ICON.x)[stage]||'•';}
 function headerHTML(){
   const ex=state.expert,E=EXPERT[ex]||(ex==='all'?{short:'종합',sub:'세 전문가 공동 추천'}:{name:'설정',sub:'연결 · 백업/복원'});
   let pill;
   if(ex==='wein'){const m=cache.mkt&&!cache.mkt.err?cache.mkt:null;
-    pill=m?`<div class="mkt s${m.stage}" title="시장 지수 단계"><span class="dot" style="background:var(--c)">${m.stage}</span><span>시장 ${STAGE[m.stage].name}</span></div>`:`<div class="mkt"><span>시장 지수 없음</span></div>`;}
+    pill=m?`<div class="mkt s${m.stage}" title="시장 지수 단계"><span class="mi">${mkIcon(m.stage,1)}</span><span>시장 ${STAGE[m.stage].name}</span></div>`:`<div class="mkt"><span>시장 지수 없음</span></div>`;}
   else if(ex==='oneil'||ex==='mn'){const m=ex==='oneil'?cache.mO:cache.mM;
-    pill=m&&!m.err?`<div class="mkt s${m.stage}" title="시장 판정"><span class="dot" style="background:var(--c)">${m.stage===2?'▲':m.stage===1?'△':'▼'}</span><span>${m.label}</span></div>`:`<div class="mkt"><span>시장 지수 없음</span></div>`;}
+    pill=m&&!m.err?`<div class="mkt s${m.stage}" title="시장 판정"><span class="mi">${mkIcon(m.stage,0)}</span><span>${m.label}</span></div>`:`<div class="mkt"><span>시장 지수 없음</span></div>`;}
   else pill='';
   const gear=`<button class="gear" data-act="${ex==='settings'?'settings-close':'settings'}" aria-label="${ex==='settings'?'설정 닫기':'설정'}" title="설정"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.65 8.9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 8.9 4.6a1.7 1.7 0 0 0 1.03-1.56V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15z"/></svg></button>`;
   return `<div class="titlerow"><div class="apptitle">기술적분석투자</div>${gear}</div><div class="top"><div><h1>${ex==='settings'?'설정':E.short}</h1><p>${E.sub}</p></div>${pill}</div>`;
@@ -946,8 +952,8 @@ function resultsHTML(items){
 }
 function heroHTML(name,A,isMkt){
   const st=STAGE[A.stage];
-  return `<div class="card hero s${A.stage}"><div class="big">${A.stage}<small>${st.name}</small></div>
-    <div><h2>${esc(name)}</h2>${isMkt?`<span class="sig ${A.stage===2?'buy':A.stage===4?'avoid':A.stage===3?'reduce':'wait'}">${st.n} ${st.name}</span><p>${MKT_ADVICE[A.stage]}</p>`
+  return `<div class="card hero s${A.stage}"><div class="big">${isMkt?mkIcon(A.stage,1):A.stage}<small>${st.name}</small></div>
+    <div><h2>${esc(name)}</h2>${isMkt?`<span class="sig ${A.stage===2?'buy':A.stage===4?'avoid':A.stage===3?'reduce':'wait'}">${mkIcon(A.stage,1)} ${st.n} ${st.name}</span><p>${MKT_ADVICE[A.stage]}</p>`
     :`<span class="sig ${A.sig.k}">${A.sig.t}</span><p>${A.sig.d}</p>`}</div></div>`;
 }
 function chartHTML(A,withRS){
@@ -1061,18 +1067,33 @@ function rulesHTML(){
 
 /* ---------- 종목명 → 코드 ---------- */
 const STOCKDB='삼성전자:005930,SK하이닉스:000660,LG에너지솔루션:373220,삼성바이오로직스:207940,현대차:005380,기아:000270,셀트리온:068270,KB금융:105560,신한지주:055550,하나금융지주:086790,우리금융지주:316140,POSCO홀딩스:005490,NAVER:035420,네이버:035420,카카오:035720,삼성SDI:006400,LG화학:051910,현대모비스:012330,삼성물산:028260,삼성생명:032830,삼성화재:000810,한화에어로스페이스:012450,두산에너빌리티:034020,HD현대중공업:329180,HD한국조선해양:009540,한국조선해양:009540,HD현대일렉트릭:267260,HD현대:267250,삼성전기:009150,삼성SDS:018260,LG전자:066570,LG:003550,SK:034730,SK이노베이션:096770,SK텔레콤:017670,KT:030200,LG유플러스:032640,포스코퓨처엠:003670,에코프로:086520,에코프로비엠:247540,알테오젠:196170,HLB:028300,크래프톤:259960,엔씨소프트:036570,넷마블:251270,카카오뱅크:323410,카카오페이:377300,하이브:352820,JYP Ent.:035900,에스엠:041510,와이지엔터테인먼트:122870,고려아연:010130,한국전력:015760,한국가스공사:036460,대한항공:003490,현대글로비스:086280,현대건설:000720,삼성E&A:028050,대우건설:047040,GS건설:006360,포스코인터내셔널:047050,포스코DX:022100,한미반도체:042700,리노공업:058470,이오테크닉스:039030,원익IPS:240810,주성엔지니어링:036930,테크윙:089030,파크시스템스:140860,HPSP:403870,솔브레인:357780,동진쎄미켐:005290,두산로보틱스:454910,레인보우로보틱스:277810,클래시스:214150,리가켐바이오:141080,펄어비스:263750,컴투스:078340,위메이드:112040,카카오게임즈:293490,한화솔루션:009830,OCI홀딩스:010060,한화오션:042660,한화시스템:272210,LIG넥스원:079550,현대로템:064350,한국항공우주:047810,풍산:103140,대한전선:001440,LS ELECTRIC:010120,LS:006260,효성중공업:298040,제룡전기:033100,일진전기:103590,산일전자:062040,삼양식품:003230,농심:004370,오리온:271560,CJ제일제당:097950,아모레퍼시픽:090430,LG생활건강:051900,코스맥스:192820,한국콜마:161890,호텔신라:008770,강원랜드:035250,이마트:139480,롯데쇼핑:023530,현대백화점:069960,신세계:004170,유한양행:000100,한미약품:128940,녹십자:006280,대웅제약:069620,종근당:185750,SK바이오팜:326030,SK바이오사이언스:302440,삼천당제약:000250,에이피알:278470,실리콘투:257720,현대위아:011210,현대제철:004020,한온시스템:018880,HL만도:204320,금호석유화학:011780,롯데케미칼:011170,한화:000880,두산:000150,두산밥캣:241560,삼성중공업:010140,디케이락:105740,타이거일렉:219130,롯데렌탈:089860,케이엠더블유:032500,에스티팜:237690,휴젤:145020,파마리서치:214450,씨젠:096530,심텍:222800,이수페타시스:007660,대덕전자:353200,비에이치:090460,와이솔:122990,엘앤에프:066970,천보:278280,코스모신소재:005070,에코프로머티:450080,피에스케이:319660,하나마이크론:067310,티씨케이:064760,ISC:095340,서진시스템:178320,현대오토에버:307950,삼성증권:016360,미래에셋증권:006800,한국금융지주:071050,NH투자증권:005940,키움증권:039490,메리츠금융지주:138040,기업은행:024110,BNK금융지주:138930,맥쿼리인프라:088980,KODEX 200:069500,KODEX 코스닥150:229200,TIGER 200:102110,KODEX 레버리지:122630,KODEX 2차전지산업:305720,TIGER 미국S&P500:360750,TIGER 미국나스닥100:133690'.split(',').map(x=>{const i=x.lastIndexOf(':');return {name:x.slice(0,i),code:x.slice(i+1)};});
+const CHO='ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+const isJamo=ch=>ch>='ㄱ'&&ch<='ㅎ';
+function choOf(ch){const c=ch.charCodeAt(0);return (c>=0xAC00&&c<=0xD7A3)?CHO[Math.floor((c-0xAC00)/588)]:ch;}
+const CHO_BASE={'ㄲ':'ㄱ','ㄸ':'ㄷ','ㅃ':'ㅂ','ㅆ':'ㅅ','ㅉ':'ㅈ'};
+const cb=x=>CHO_BASE[x]||x;
+// 초성 포함 검색: q의 자음 글자는 이름 글자의 초성과, 나머지는 글자 그대로 비교한다. 위치(-1이면 없음)를 돌려준다.
+function choFind(name,q){
+  const a=Array.from(name),b=Array.from(q);if(!b.length||b.length>a.length)return -1;
+  for(let i=0;i+b.length<=a.length;i++){let ok=true;
+    for(let j=0;j<b.length;j++){const x=a[i+j],y=b[j];if(isJamo(y)?cb(choOf(x))!==cb(y):x!==y){ok=false;break;}}
+    if(ok)return i;}
+  return -1;
+}
+const hasJamo=t=>Array.from(String(t||'')).some(isJamo);
 const normQ=t=>String(t||'').toLowerCase().replace(/[\s.\-_()]/g,'');
 function localMatches(q){
   const n=normQ(q);if(!n)return [];
   if(/^[0-9a-z]{6}$/i.test(q.trim())&&/\d/.test(q))return [];
   const pool=[...state.stocks.filter(s=>s.code).map(s=>({name:s.name,code:s.code})),...state.cands.map(c=>({name:c.name,code:c.code})),...STOCKDB];
-  const seen=new Set(),ex=[],st=[],inc=[];
+  const seen=new Set(),ex=[],st=[],inc=[],jm=hasJamo(n);
   for(const it of pool){
     const k=it.code;if(seen.has(k))continue;
     const m=normQ(it.name);
+    if(jm){const at=choFind(m,n);if(at===0){st.push(it);seen.add(k);}else if(at>0){inc.push(it);seen.add(k);}continue;}
     if(m===n){ex.push(it);seen.add(k);}else if(m.startsWith(n)){st.push(it);seen.add(k);}else if(m.includes(n)){inc.push(it);seen.add(k);}
   }
-  return [...ex,...st,...inc].slice(0,6);
+  return [...ex,...st,...inc].slice(0,jm?10:6);
 }
 async function remoteMatches(q){
   const out=[],ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),4000);
@@ -1129,7 +1150,7 @@ function onNameInput(){
     if(ex.length===1||(loc.length===1&&q.length>=2)){cEl.value=(ex[0]||loc[0]).code;cEl.dataset.auto='1';}
     else if(cEl.dataset.auto==='1'){cEl.value='';cEl.dataset.auto='';}
   }
-  if(q.length>=2&&!ex.length){
+  if(q.length>=2&&!ex.length&&!hasJamo(q)){
     const my=++sugSeq;
     sugTimer=setTimeout(async()=>{
       const rem=await remoteMatches(q);if(my!==sugSeq)return;
@@ -1383,8 +1404,8 @@ function marketExpertHTML(ex){
   if(!m||m.err)return `<div class="card"><p class="err">${esc(m?m.err:'분석 실패')}</p></div>`;
   const L={pass:'충족',fail:'미충족',warn:'주의',unk:'확인불가'};
   if(A&&!A.err)view={rows:state.market.rows,A};
-  return statusHTML()+`<div class="card hero s${m.stage}"><div class="big">${m.stage===2?'▲':m.stage===1?'△':'▼'}<small>${m.score}/${m.total}</small></div>
-    <div><h2>${esc(state.market.name)}</h2><span class="sig ${m.stage===2?'buy':m.stage===1?'watch':'avoid'}">${m.label}</span><p>${m.desc}</p></div></div>
+  return statusHTML()+`<div class="card hero s${m.stage}"><div class="big">${mkIcon(m.stage,0)}<small>${m.score}/${m.total}</small></div>
+    <div><h2>${esc(state.market.name)}</h2><span class="sig ${m.stage===2?'buy':m.stage===1?'watch':'avoid'}">${mkIcon(m.stage,0)} ${m.label}</span><p>${m.desc}</p></div></div>
     ${A&&!A.err?chartHTML(A,false):''}
     <div class="card"><h3>${M.title}식 시장 점검 <span class="score">${m.score}/${m.total} 충족</span></h3><ul class="checks">${m.checks.map(x=>`<li><span class="pill ${x.st}">${L[x.st]}</span><div><b>${esc(x.label)}</b><span class="d">${esc(x.detail)}</span></div></li>`).join('')}</ul>
     <p class="note">차트의 색 배경은 와인스타인의 4단계 구간이고, 주황선은 30주선입니다. 시장 지수는 설정(⚙)의 연결의 대용 종목(기본 KODEX 200)을 씁니다.</p></div>
