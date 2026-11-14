@@ -45,7 +45,13 @@
 html,body{margin:0;padding:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:14px;line-height:1.35;-webkit-text-size-adjust:100%}
 .wrap{max-width:none;width:100%;margin:0;padding:6px 6px 24px;overflow-x:hidden}
-.wrap *{min-width:0}
+.wrap .card,.wrap .tile,.wrap .row>span,.wrap .hero>div,.wrap .checks li>div,.wrap .candhead>div,.wrap .resrow>.reslist{min-width:0}
+.btn,.chip,.sig,.tag,.pill,.mkt,.tabs button{white-space:normal;overflow-wrap:anywhere;word-break:keep-all;text-align:center;line-height:1.25;max-width:100%}
+.btn,.chip{display:inline-flex;align-items:center;justify-content:center}
+.sig{box-sizing:border-box;padding:2px 8px}
+.row .name,.row .sub,.tile b,.tile em,.tile small{overflow-wrap:anywhere}
+.row .right{max-width:48%}
+.mkt{white-space:normal}
 button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 h1,h2,h3{text-wrap:balance;margin:0}
@@ -55,7 +61,7 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .top{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:4px 10px;margin-bottom:6px}
 .top h1{font-family:var(--font-title);font-weight:700;font-size:24px;line-height:1.1;letter-spacing:-.035em;white-space:nowrap}
 .top p{margin:0;color:var(--muted);font-size:12px}
-.mkt{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:2px 8px 2px 4px;display:flex;align-items:center;gap:8px;font-size:13px;white-space:nowrap}
+.mkt{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:2px 8px 2px 4px;display:flex;align-items:center;gap:8px;font-size:13px}
 .mkt .dot{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px;font-family:var(--font-mono)}
 .tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:8px;position:sticky;top:0;background:var(--bg);z-index:5;padding-top:0}
 .tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:4px 4px;flex:1;min-height:36px;font-weight:500;color:var(--muted)}
@@ -65,7 +71,7 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .s1{--c:var(--s1)} .s2{--c:var(--s2)} .s3{--c:var(--s3)} .s4{--c:var(--s4)}
 .sig.buy{--c:var(--s2)} .sig.watch{--c:var(--accent)} .sig.hold{--c:var(--s2)} .sig.hot{--c:var(--s3)}
 .sig.wait{--c:var(--s1)} .sig.reduce{--c:var(--s3)} .sig.avoid{--c:var(--s4)}
-.sig{display:inline-block;border:1px solid var(--c);color:var(--c);background:color-mix(in srgb,var(--c) 10%,var(--surface));border-radius:6px;padding:2px 8px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.sig{display:inline-block;border:1px solid var(--c);color:var(--c);background:color-mix(in srgb,var(--c) 10%,var(--surface));border-radius:6px;padding:2px 8px;font-size:12.5px;font-weight:700}
 .sig.buy{background:var(--c);color:#fff}
 
 /* 버튼 */
