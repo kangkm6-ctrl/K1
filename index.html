@@ -58,6 +58,9 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .num{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
 
 /* 상단 */
+.titlerow{position:relative;display:flex;align-items:center;justify-content:center;padding:0 40px}
+.gear{position:absolute;right:0;top:50%;transform:translateY(-50%);width:36px;height:36px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:50%;display:grid;place-items:center;padding:0}
+.gear:active{background:var(--bg)}
 .apptitle{color:#2fbf7c;background:linear-gradient(180deg,#5fe3a6 0%,#2fbf7c 55%,#1c8a58 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-family:'Noto Sans KR',var(--font-title);font-weight:900;font-size:34px;line-height:1.15;letter-spacing:-.04em;text-align:center;margin:2px 0 8px;overflow-wrap:anywhere}
 @media (max-width:420px){.apptitle{font-size:30px}}
 .top{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:4px 10px;margin-bottom:6px}
@@ -740,7 +743,7 @@ function topOf(list,ex){
 }
 async function runScan(resume){
   if(state.busy)return;
-  if(!state.conn.url||!state.conn.secret){refreshErr='연결 탭에서 서버 주소와 비밀키를 먼저 입력하세요.';state.expert='conn';state.tab='stocks';state.sel=null;state.form=null;render();return;}
+  if(!state.conn.url||!state.conn.secret){refreshErr='설정(⚙)의 연결에서 서버 주소와 비밀키를 먼저 입력하세요.';state.prevExpert=state.expert==='settings'?state.prevExpert:state.expert;state.expert='settings';state.tab='stocks';state.sel=null;state.form=null;render();return;}
   state.sel=null;state.form=null;state.expert='all';state.tab='stocks';state.stop=false;refreshErr='';
   const mcode=state.conn.mktCode||'069500';
   state.busy='시장 지수 조회 중…';render();
@@ -754,7 +757,7 @@ async function runScan(resume){
     if(!state.universe||!state.universe.length||state.uniSrc==='auto'||!state.uniSrc){
       state.busy='전체 종목 목록 받는 중…';render();
       try{const u=await fetchUniverseOnline();state.universe=u;state.uniSrc='auto';}
-      catch(e){if(state.uniSrc!=='manual'){state.universe=null;state.uniSrc=null;}state.uniNote='전체 종목 목록을 받지 못해 '+(state.universe?'저장된 목록':'내장 종목 약 190개')+'로 스캔했습니다. 연결 탭에서 전체 종목 코드를 붙여넣으면 전체 시장을 스캔합니다.';}
+      catch(e){if(state.uniSrc!=='manual'){state.universe=null;state.uniSrc=null;}state.uniNote='전체 종목 목록을 받지 못해 '+(state.universe?'저장된 목록':'내장 종목 약 190개')+'로 스캔했습니다. 설정(⚙)의 연결에서 전체 종목 코드를 붙여넣으면 전체 시장을 스캔합니다.';}
     }
     const uni=getUniverse();
     state.scan={ts:Date.now(),total:uni.length,q:uni.map(x=>x[0]),names:Object.fromEntries(uni),items:[],errs:0,done:false};
@@ -848,7 +851,7 @@ function allHTML(){
     <div class="card"><h3>시장 판정</h3><div class="tiles" style="grid-template-columns:repeat(3,1fr)">${mk}</div></div>
     <div class="card"><h3>전체 시장 스캔 <span class="score">코스피·코스닥</span></h3><p class="note">${info}</p>
     <div class="bar" style="margin:6px 0 0"><button class="btn" data-act="scan-full" ${state.busy?'disabled':''}>${left?'새로 스캔':'전체 시장 스캔'}</button>${left?`<button class="btn" data-act="scan-resume" ${state.busy?'disabled':''}>이어서 스캔</button>`:''}</div>
-    <p class="note">대상: ${state.universe&&state.universe.length?'저장된 전체 목록 '+state.universe.length+'종목':'내장 종목 약 190개 (연결 탭에서 전체 종목 목록을 넣으면 전체 시장)'} · 1종목씩 서버에서 받으므로 전체는 10분 넘게 걸릴 수 있습니다.</p></div>
+    <p class="note">대상: ${state.universe&&state.universe.length?'저장된 전체 목록 '+state.universe.length+'종목':'내장 종목 약 190개 (설정(⚙)의 연결에서 전체 종목 목록을 넣으면 전체 시장)'} · 1종목씩 서버에서 받으므로 전체는 10분 넘게 걸릴 수 있습니다.</p></div>
     ${topCard('와인스타인 상위 10 (2단계)','w')}${topCard('오닐 상위 10','o')}${topCard('미너비니 상위 10','m')}
     <p class="foot">참고용 정보이며 투자 권유가 아닙니다. 판정은 주봉 가격·거래량 기준이고 실적은 반영하지 않습니다.</p>`;
 }
@@ -886,21 +889,22 @@ const EXPERT={
   mn:{name:'마크 미너비니',short:'미너비니',sub:'트렌드 템플릿 · VCP'}
 };
 function headerHTML(){
-  const ex=state.expert,E=EXPERT[ex]||(ex==='all'?{short:'종합',sub:'세 전문가 공동 추천'}:{name:'연결',sub:'세 방식이 함께 쓰는 시세 서버'});
+  const ex=state.expert,E=EXPERT[ex]||(ex==='all'?{short:'종합',sub:'세 전문가 공동 추천'}:{name:'설정',sub:'연결 · 백업/복원'});
   let pill;
   if(ex==='wein'){const m=cache.mkt&&!cache.mkt.err?cache.mkt:null;
     pill=m?`<div class="mkt s${m.stage}" title="시장 지수 단계"><span class="dot" style="background:var(--c)">${m.stage}</span><span>시장 ${STAGE[m.stage].name}</span></div>`:`<div class="mkt"><span>시장 지수 없음</span></div>`;}
   else if(ex==='oneil'||ex==='mn'){const m=ex==='oneil'?cache.mO:cache.mM;
     pill=m&&!m.err?`<div class="mkt s${m.stage}" title="시장 판정"><span class="dot" style="background:var(--c)">${m.stage===2?'▲':m.stage===1?'△':'▼'}</span><span>${m.label}</span></div>`:`<div class="mkt"><span>시장 지수 없음</span></div>`;}
   else pill='';
-  return `<div class="apptitle">기술적분석투자</div><div class="top"><div><h1>${ex==='conn'?'연결':E.short}</h1><p>${E.sub}</p></div>${pill}</div>`;
+  const gear=`<button class="gear" data-act="${ex==='settings'?'settings-close':'settings'}" aria-label="${ex==='settings'?'설정 닫기':'설정'}" title="설정"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.65 8.9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 8.9 4.6a1.7 1.7 0 0 0 1.03-1.56V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15z"/></svg></button>`;
+  return `<div class="titlerow"><div class="apptitle">기술적분석투자</div>${gear}</div><div class="top"><div><h1>${ex==='settings'?'설정':E.short}</h1><p>${E.sub}</p></div>${pill}</div>`;
 }
 function tabsHTML(){
   const ex=state.expert;
   const e=(k,l)=>`<button data-act="expert" data-id="${k}" ${ex===k&&!state.form?'aria-current="page"':''}>${l}</button>`;
   const t=(k,l)=>`<button data-act="tab" data-id="${k}" ${state.tab===k&&!state.form?'aria-current="page"':''}>${l}</button>`;
-  const sub=(ex==='conn'||ex==='all')?'':`<nav class="tabs sub">${t('stocks','종목')}${ex==='wein'?t('cand','후보'):''}${t('market','시장')}${t('rules','규칙')}</nav>`;
-  return `<nav class="tabs main">${e('all','종합')}${e('wein','와인스타인')}${e('oneil','오닐')}${e('mn','미너비니')}${e('conn','연결')}</nav>${sub}`;
+  const sub=(ex==='settings'||ex==='all')?'':`<nav class="tabs sub">${t('stocks','종목')}${ex==='wein'?t('cand','후보'):''}${t('market','시장')}${t('rules','규칙')}</nav>`;
+  return `<nav class="tabs main">${e('all','종합')}${e('wein','와인스타인')}${e('oneil','오닐')}${e('mn','미너비니')}</nav>${sub}`;
 }
 function sparkSVG(rows,A){
   const N=Math.min(52,rows.length),off=rows.length-N,pts=rows.slice(off).map(r=>r.c);
@@ -927,11 +931,6 @@ function listHTML(){
     <button class="btn" data-act="load-ex" ${state.busy?'disabled':''}>단계별 10종목 불러오기</button>${hasEx?'<button class="btn" data-act="clear-ex">예시 지우기</button>':''}</div>
     ${state.manage?'<p class="note">삭제할 종목의 삭제 버튼을 누르세요. 추가한 종목은 이 기기에 자동 저장됩니다.</p>':''}${statusHTML()}${!state.busy&&state.lastRefresh?`<p class="note">마지막 새로고침 ${esc(new Date(state.lastRefresh).toLocaleString('ko-KR'))}</p>`:''}${resultsHTML(items)}
     ${items.length?`<div class="summary">${sum}</div><div class="list">${rows}</div>`:`<div class="card"><h3>등록된 종목이 없습니다</h3><p class="note">종목 추가에서 일봉 또는 주봉 표를 붙여넣으면 현재 단계와 매수·매도 신호를 계산합니다.</p></div>`}
-    <details class="card" style="margin-top:14px"><summary>백업과 복원</summary>
-      <p class="note">데이터는 이 브라우저에만 저장됩니다. 다른 기기로 옮기려면 아래 텍스트를 복사해 두었다가 붙여넣어 가져오세요.</p>
-      <textarea id="io" style="min-height:90px" placeholder="여기에 백업 텍스트를 붙여넣고 가져오기를 누르세요"></textarea>
-      <div class="bar" style="margin:8px 0 0"><button class="btn small" data-act="export">백업 만들기</button><button class="btn small" data-act="copy-io">복사</button><button class="btn small" data-act="import">가져오기</button></div>
-      ${ioMsg?`<p class="note">${esc(ioMsg)}</p>`:''}</details>
     <p class="foot">이 앱은 책의 규칙을 기계적으로 적용한 참고용 도구이며, 투자 판단과 책임은 본인에게 있습니다.</p>`;
 }
 function statusHTML(){return (state.busy?`<p class="note" role="status">${esc(state.busy)}${state.busy.startsWith('종목 찾는 중')?' <button class="btn small" data-act="scan-stop">중단</button>':''}</p>`:'')+(refreshErr?`<p class="err">${esc(refreshErr)}</p>`:'');}
@@ -1168,13 +1167,13 @@ async function httpJSON(path,mode,timeoutMs){
 }
 async function fetchWeekly(code,daysOv){
   const c=state.conn;
-  if(!c.url||!c.secret)throw new Error('연결 탭에서 서버 주소와 비밀키를 먼저 입력하세요.');
+  if(!c.url||!c.secret)throw new Error('설정(⚙)의 연결에서 서버 주소와 비밀키를 먼저 입력하세요.');
   const path='/stock-history/'+encodeURIComponent(code)+'?period=W&days='+(daysOv||c.days||1100);
   let j;
   try{j=await httpJSON(path,c.mode);}
   catch(e){
     if(e.name==='AbortError')throw new Error('서버 응답이 늦습니다. 서버가 깨어나는 중일 수 있으니 잠시 뒤 다시 시도하세요.');
-    if(e.status===401||e.status===403)throw new Error('비밀키가 맞지 않습니다. 연결 탭에서 다시 테스트하세요.');
+    if(e.status===401||e.status===403)throw new Error('비밀키가 맞지 않습니다. 설정(⚙)의 연결에서 다시 테스트하세요.');
     if(e instanceof TypeError)throw new Error('서버에 연결하지 못했습니다. 주소와 인터넷 연결, 서버의 허용 주소 설정을 확인하세요.');
     throw e;
   }
@@ -1243,7 +1242,7 @@ async function refreshAll(silent,boot){
   const mkCode=hasMk?state.market.code:(boot&&state.conn.mktCode?state.conn.mktCode:''),mk=!!mkCode;
   const total=list.length+(mk?1:0);
   if(!total){if(!silent){refreshErr='종목코드가 있는 종목이 없습니다. 종목을 코드로 추가하세요.';render();}return;}
-  if(!state.conn.url||!state.conn.secret){if(!silent){refreshErr='연결 탭에서 서버 주소와 비밀키를 먼저 입력하세요.';render();}return;}
+  if(!state.conn.url||!state.conn.secret){if(!silent){refreshErr='설정(⚙)의 연결에서 서버 주소와 비밀키를 먼저 입력하세요.';render();}return;}
   const errs=[];let i=0;refreshErr='';
   const step=async(fn,label)=>{i++;state.busy='시세 조회 중 '+i+'/'+total+' · '+label;if(state.tab==='stocks'&&!state.sel&&!state.form)render();
     try{await fn();}catch(e){errs.push(label+': '+e.message);}};
@@ -1315,7 +1314,7 @@ function candHTML(){
 async function addCodes(codes,tab){
   if(state.busy)return;
   const have=new Set(exStocks('wein').map(s=>s.code)),errs=[],nm={};STOCKDB.forEach(x=>{nm[x.code]=x.name;});state.cands.forEach(x=>{nm[x.code]=x.name;});
-  if(!state.conn.url||!state.conn.secret){refreshErr='연결 탭에서 서버 주소와 비밀키를 먼저 입력하세요.';render();return;}
+  if(!state.conn.url||!state.conn.secret){refreshErr='설정(⚙)의 연결에서 서버 주소와 비밀키를 먼저 입력하세요.';render();return;}
   state.expert='wein';state.tab=tab||'cand';refreshErr='';
   for(let i=0;i<codes.length;i++){
     const cd=codes[i];if(have.has(cd))continue;
@@ -1380,7 +1379,7 @@ function methodHTML(ex){
 }
 function marketExpertHTML(ex){
   const M=METHOD[ex],m=ex==='oneil'?cache.mO:cache.mM,A=cache.mkt;
-  if(!state.market)return `<div class="card"><h3>시장 지수가 없습니다</h3><p class="note">시장 지수는 세 방식이 함께 씁니다. 연결 탭에서 서버를 연결하면 앱을 열 때 자동으로 받아옵니다.</p></div><div class="bar"><button class="btn primary" data-act="fetch-market" ${state.busy?'disabled':''}>자동 조회</button></div>`;
+  if(!state.market)return `<div class="card"><h3>시장 지수가 없습니다</h3><p class="note">시장 지수는 세 방식이 함께 씁니다. 설정(⚙)의 연결에서 서버를 연결하면 앱을 열 때 자동으로 받아옵니다.</p></div><div class="bar"><button class="btn primary" data-act="fetch-market" ${state.busy?'disabled':''}>자동 조회</button></div>`;
   if(!m||m.err)return `<div class="card"><p class="err">${esc(m?m.err:'분석 실패')}</p></div>`;
   const L={pass:'충족',fail:'미충족',warn:'주의',unk:'확인불가'};
   if(A&&!A.err)view={rows:state.market.rows,A};
@@ -1388,7 +1387,7 @@ function marketExpertHTML(ex){
     <div><h2>${esc(state.market.name)}</h2><span class="sig ${m.stage===2?'buy':m.stage===1?'watch':'avoid'}">${m.label}</span><p>${m.desc}</p></div></div>
     ${A&&!A.err?chartHTML(A,false):''}
     <div class="card"><h3>${M.title}식 시장 점검 <span class="score">${m.score}/${m.total} 충족</span></h3><ul class="checks">${m.checks.map(x=>`<li><span class="pill ${x.st}">${L[x.st]}</span><div><b>${esc(x.label)}</b><span class="d">${esc(x.detail)}</span></div></li>`).join('')}</ul>
-    <p class="note">차트의 색 배경은 와인스타인의 4단계 구간이고, 주황선은 30주선입니다. 시장 지수는 연결 탭의 대용 종목(기본 KODEX 200)을 씁니다.</p></div>
+    <p class="note">차트의 색 배경은 와인스타인의 4단계 구간이고, 주황선은 30주선입니다. 시장 지수는 설정(⚙)의 연결의 대용 종목(기본 KODEX 200)을 씁니다.</p></div>
     <div class="bar"><button class="btn primary" data-act="fetch-market" ${state.busy?'disabled':''}>자동 조회</button></div>`;
 }
 function rulesExpertHTML(ex){
@@ -1401,12 +1400,22 @@ function rulesExpertHTML(ex){
     <p class="note">이 앱은 가격·거래량으로 판정할 수 있는 부분만 기계적으로 옮겼습니다. 패턴 인식은 주봉 가격으로 근사한 것이라 차트로 한 번 더 확인하세요. 참고용이며 투자 판단과 책임은 본인에게 있습니다.</p></div>`;
 }
 
+function backupHTML(){
+  return `<div class="card"><h3>백업과 복원</h3>
+    <p class="note">데이터는 이 브라우저에만 저장됩니다. 다른 기기로 옮기려면 백업을 만들어 복사해 두었다가, 다른 기기에서 붙여넣어 가져오세요. 서버 비밀키는 백업에 들어가지 않습니다.</p>
+    <textarea id="io" style="min-height:90px" placeholder="여기에 백업 텍스트를 붙여넣고 가져오기를 누르세요"></textarea>
+    <div class="bar" style="margin:8px 0 0"><button class="btn small" data-act="export">백업 만들기</button><button class="btn small" data-act="copy-io">복사</button><button class="btn small" data-act="import">가져오기</button></div>
+    ${ioMsg?`<p class="note">${esc(ioMsg)}</p>`:''}</div>`;
+}
+function settingsHTML(){
+  return `<div class="bar"><button class="btn small" data-act="settings-close">← 돌아가기</button></div>${connHTML()}${backupHTML()}`;
+}
 /* ---------- 렌더 ---------- */
 function render(){
   view=null;hoverI=null;
   const ex=state.expert;let body;
   if(state.form)body=formHTML();
-  else if(ex==='conn')body=connHTML();
+  else if(ex==='settings')body=settingsHTML();
   else if(ex==='all')body=allHTML();
   else if(ex==='wein'){
     if(state.tab==='stocks')body=state.sel?detailHTML(state.sel):listHTML();
@@ -1489,7 +1498,9 @@ function readFile(file){return new Promise((res,rej)=>{const fr=new FileReader()
 document.addEventListener('click',e=>{
   const b=e.target.closest('[data-act]');if(!b)return;
   const act=b.dataset.act,id=b.dataset.id;
-  if(act==='expert'){state.manage=false;state.expert=id;state.tab='stocks';state.sel=null;state.form=null;formErr='';render();window.scrollTo(0,0);}
+  if(act==='settings'){state.prevExpert=state.expert;state.prevTab=state.tab;state.expert='settings';state.sel=null;state.form=null;formErr='';render();window.scrollTo(0,0);}
+  else if(act==='settings-close'){state.expert=(state.prevExpert&&state.prevExpert!=='settings')?state.prevExpert:'all';state.tab=state.prevTab||'stocks';render();window.scrollTo(0,0);}
+  else if(act==='expert'){state.manage=false;state.expert=id;state.tab='stocks';state.sel=null;state.form=null;formErr='';render();window.scrollTo(0,0);}
   else if(act==='tab'){state.manage=false;state.tab=id;state.sel=null;state.form=null;formErr='';render();window.scrollTo(0,0);}
   else if(act==='open'){state.sel=id;render();window.scrollTo(0,0);}
   else if(act==='back'){state.sel=null;render();}
@@ -1524,9 +1535,9 @@ document.addEventListener('click',e=>{
   else if(act==='copy-io'){const t=$('#io');t.select();try{navigator.clipboard.writeText(t.value);}catch(err){}}
   else if(act==='import'){
     try{const o=JSON.parse($('#io').value);if(!o||!Array.isArray(o.stocks))throw 0;
-      if(o.market)state.market=o.market;o.stocks.forEach(s=>{if(s&&s.name&&Array.isArray(s.rows))state.stocks.push({id:uid(),name:s.name,code:s.code||'',rows:s.rows,ex:!!s.ex,m:(Array.isArray(s.m)&&s.m.length)?s.m:['wein'],a:s.a});});
+      if(o.market)state.market=o.market;o.stocks.forEach(s=>{if(!(s&&s.name&&Array.isArray(s.rows)))return;const mm=(Array.isArray(s.m)&&s.m.length)?s.m:['wein'];const ex0=s.code&&state.stocks.find(x=>x.code===s.code);if(ex0){ex0.rows=s.rows;mm.forEach(k=>{if(!(ex0.m||[]).includes(k))(ex0.m=ex0.m||[]).push(k);});}else state.stocks.push({id:uid(),name:s.name,code:s.code||'',rows:s.rows,ex:!!s.ex,m:mm,a:s.a});});
       save();recompute();ioMsg='가져왔습니다.';render();}
-    catch(err){ioMsg='백업 텍스트를 읽지 못했습니다.';const d=document.querySelector('details');render();const dd=document.querySelector('details');if(dd)dd.open=true;}
+    catch(err){ioMsg='백업 텍스트를 읽지 못했습니다.';render();}
   }
 });
 async function saveForm(){
