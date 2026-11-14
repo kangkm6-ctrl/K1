@@ -1,7 +1,7 @@
 {
-  "name": "스테이지 분석기",
-  "short_name": "스테이지",
-  "description": "30주 이동평균으로 보는 4단계 주기 분석",
+  "name": "기술적분석투자",
+  "short_name": "기술적분석",
+  "description": "와인스타인·오닐·미너비니 기준 기술적 분석 투자 도구",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
