@@ -64,7 +64,10 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .mkt{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:2px 8px 2px 4px;display:flex;align-items:center;gap:8px;font-size:13px}
 .mkt .dot{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px;font-family:var(--font-mono)}
 .tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:8px;position:sticky;top:0;background:var(--bg);z-index:5;padding-top:0}
-.tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:4px 4px;flex:1;min-height:36px;font-weight:500;color:var(--muted)}
+.tabs button{background:none;border:0;border-bottom:3px solid transparent;font-size:13px;padding:4px 2px;flex:1;min-height:36px;font-weight:500;color:var(--muted)}
+.tabs.sub{margin-top:-4px}
+.tabs.sub button{font-size:12.5px;min-height:30px;font-weight:400}
+.tabs.main button{font-size:14px}
 .tabs button[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:700}
 
 /* 색 */
@@ -149,6 +152,11 @@ table.p td:last-child{text-align:right;font-family:var(--font-mono)}
 .resrow{display:flex;gap:8px;align-items:flex-start;padding:4px 0;border-top:1px solid var(--line)}
 .resrow:first-of-type{border-top:0}
 .reslist{display:flex;gap:6px;flex-wrap:wrap}
+.mrow2>summary{display:flex;align-items:center;gap:6px;flex-wrap:wrap;list-style:none}
+.mrow2>summary::-webkit-details-marker{display:none}
+.mrow2 .mname{flex:1;min-width:0;overflow-wrap:anywhere}
+.mrow2[open]>summary{margin-bottom:4px}
+.rules2{padding-left:18px;margin:6px 0;font-size:13px}
 .mrow{--c:var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
 .sug{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0;min-height:0}
 .sug .chip{cursor:pointer;color:var(--ink)}
@@ -423,6 +431,180 @@ function exampleSet(){
     ].map(s=>Object.assign(s,{ex:true}))
   };
 }
+
+/* ===== 윌리엄 오닐 · 마크 미너비니 ===== */
+function ret52(rows,bench){
+  if(!bench)return null;
+  const bm=new Map(bench.map(r=>[r.d,r.c])),last=rows.length-1,i0=Math.max(0,last-52);
+  const b1=bm.get(rows[last].d),b0=bm.get(rows[i0].d);
+  if(!b1||!b0)return null;
+  return{s:(rows[last].c/rows[i0].c-1)*100,m:(b1/b0-1)*100};
+}
+function swingContr(c,last){
+  const from=Math.max(2,last-40),seq=[];
+  for(let i=from;i<=last-2;i++){
+    let mx=-Infinity,mn=Infinity;
+    for(let k=-2;k<=2;k++){if(k===0)continue;mx=Math.max(mx,c[i+k]);mn=Math.min(mn,c[i+k]);}
+    const isH=c[i]>=mx,isL=c[i]<=mn;
+    if(isH===isL)continue;
+    const t=isH?'H':'L',p=c[i],q=seq[seq.length-1];
+    if(q&&q.t===t){if((t==='H'&&p>q.p)||(t==='L'&&p<q.p)){q.p=p;q.i=i;}}
+    else seq.push({i,t,p});
+  }
+  const depths=[];let lastLow=null;
+  for(let k=1;k<seq.length;k++){
+    if(seq[k-1].t==='H'&&seq[k].t==='L'){depths.push((seq[k-1].p-seq[k].p)/seq[k-1].p*100);lastLow=seq[k].p;}
+  }
+  return{depths:depths.slice(-4),lastLow};
+}
+function volRatio(v,i){
+  let s=0,k=0;for(let j=Math.max(0,i-10);j<i;j++){s+=v[j];k++;}
+  const a=k?s/k:0;return a>0?v[i]/a:null;
+}
+function findBase(c,h,l,last){
+  const lo0=Math.max(0,last-65);
+  let pk=-1,pv=-Infinity;
+  for(let i=lo0;i<=last-7;i++)if(c[i]>pv){pv=c[i];pk=i;}
+  if(pk>=0){
+    let lw=-1,lv=Infinity;
+    for(let i=pk+1;i<=last;i++)if(c[i]<lv){lv=c[i];lw=i;}
+    const depth=(pv-lv)/pv*100;
+    if(lw>pk&&depth>=12&&depth<=35&&lw-pk>=3&&last-lw>=3&&c[last]>=pv*0.85){
+      let piv=-Infinity;for(let j=pk;j<=last-1;j++)piv=Math.max(piv,h[j]);
+      let ml=Infinity;for(let j=Math.max(lw,last-3);j<=last-1;j++)ml=Math.min(ml,l[j]);
+      const handle=isFinite(ml)?(piv-ml)/piv*100:0;
+      if(handle<=12)return{type:'컵·핸들',pivot:piv,depth,len:last-pk,handle};
+    }
+  }
+  for(let k=12;k>=5;k--){
+    const a=last-k;if(a<1)continue;
+    let hi=-Infinity,lo=Infinity;
+    for(let j=a;j<=last-1;j++){hi=Math.max(hi,h[j]);lo=Math.min(lo,l[j]);}
+    const depth=(hi-lo)/hi*100;
+    if(depth>15)continue;
+    let pl=Infinity;for(let j=Math.max(0,a-26);j<a;j++)pl=Math.min(pl,c[j]);
+    if(isFinite(pl)&&c[a-1]/pl>=1.3)return{type:'플랫 베이스',pivot:hi,depth,len:k,handle:null};
+  }
+  return null;
+}
+function trendCore(rows){
+  const n=rows.length,c=rows.map(r=>r.c),h=rows.map(r=>r.h||r.c),l=rows.map(r=>r.l||r.c),v=rows.map(r=>r.v);
+  const m10=sma(c,10),m30=sma(c,30),m40=sma(c,40),last=n-1,P=c[last];
+  let hi52=-Infinity,lo52=Infinity;
+  for(let j=Math.max(0,last-51);j<=last;j++){hi52=Math.max(hi52,h[j]);lo52=Math.min(lo52,l[j]);}
+  return{n,c,h,l,v,m10,m30,m40,last,P,hi52,lo52,fromLow:(P/lo52-1)*100,offHigh:(1-P/hi52)*100,
+    hasVol:v.filter(x=>x>0).length>n*0.5};
+}
+function analyzeMinervini(rows,bench,mktStage){
+  if(!rows||rows.length<52)return{err:'주봉 52개 이상이 필요합니다.'};
+  const T=trendCore(rows),{c,h,l,v,m10,m30,m40,last,P,hasVol}=T;
+  const checks=[],add=(label,st,detail)=>checks.push({label,st,detail});
+  const r52=ret52(rows,bench);
+  add('주가가 30주선과 40주선 위인가',P>m30[last]&&P>m40[last]?'pass':'fail','30주선 '+fmtP(m30[last])+' · 40주선 '+fmtP(m40[last]));
+  add('30주선이 40주선 위인가',m30[last]>m40[last]?'pass':'fail','150일선이 200일선 위');
+  const up4=m40[last]>m40[last-4],up22=last>=62?m40[last]>m40[last-22]:null;
+  add('40주선이 상승 중인가',up4?'pass':'fail','4주 전 대비 '+((m40[last]/m40[last-4]-1)*100).toFixed(1)+'%'+(up22==null?'':' · 22주 전 대비 '+((m40[last]/m40[last-22]-1)*100).toFixed(1)+'%'));
+  add('10주선 > 30주선 > 40주선인가',m10[last]>m30[last]&&m30[last]>m40[last]?'pass':'fail','50일선 > 150일선 > 200일선 정배열');
+  add('주가가 10주선 위인가',P>m10[last]?'pass':'fail','10주선 '+fmtP(m10[last]));
+  add('52주 저점보다 30% 이상 위인가',T.fromLow>=30?'pass':'fail','저점 대비 +'+T.fromLow.toFixed(0)+'%');
+  add('52주 고점에서 25% 이내인가',T.offHigh<=25?'pass':'fail','고점 대비 -'+T.offHigh.toFixed(1)+'%');
+  add('상대강도가 높은가(시장 대비 52주 수익률)',r52==null?'unk':(r52.s>r52.m?'pass':'fail'),r52==null?'시장 지수를 등록하면 계산합니다':'종목 '+fmtPct(r52.s)+' · 시장 '+fmtPct(r52.m)+' (상위 30% 순위 대신 시장 초과 여부로 대체)');
+  const tt=checks.filter(x=>x.st==='pass').length;
+  const trendPass=checks.slice(0,7).every(x=>x.st==='pass')&&checks[7].st!=='fail';
+  const sc=swingContr(c,last),d=sc.depths,nd=d.length;
+  const vcp=nd>=2&&d[nd-1]<d[nd-2]&&d[nd-1]<=12;
+  let pivot=-Infinity;for(let j=Math.max(0,last-30);j<=last-1;j++)pivot=Math.max(pivot,h[j]);
+  const dist=(P/pivot-1)*100;
+  let dry=null;if(hasVol){const a=(v[last]+v[last-1]+v[last-2])/3;let s=0;for(let j=last-12;j<=last-3;j++)s+=v[j];dry=a/(s/10||1);}
+  const vr=hasVol?Math.max(volRatio(v,last)||0,volRatio(v,last-1)||0):null;
+  const vcpCheck=(label,st,detail)=>checks.push({label,st,detail,extra:true});
+  vcpCheck('변동성 수축(VCP): 되돌림이 점점 작아지는가',nd<2?'fail':(vcp?'pass':'fail'),nd?'되돌림 깊이 '+d.map(x=>x.toFixed(0)+'%').join(' → '):'뚜렷한 되돌림 없음');
+  vcpCheck('최근 거래량이 마르는가',dry==null?'unk':(dry<0.9?'pass':'fail'),dry==null?'거래량 데이터 없음':'최근 3주 / 직전 10주 평균 = '+dry.toFixed(2));
+  vcpCheck('돌파 거래량이 평균의 140% 이상인가',!hasVol?'unk':(dist>0&&dist<=5?(vr>=1.4?'pass':'fail'):'unk'),!hasVol?'거래량 데이터 없음':(dist>0&&dist<=5?'최근 거래량 평균 대비 '+vr.toFixed(1)+'배':'돌파 구간이 아니면 확인하지 않음'));
+  vcpCheck('시장 지수가 상승 단계인가',mktStage==null?'unk':(mktStage===2?'pass':(mktStage===1?'warn':'fail')),mktStage==null?'시장 탭에서 지수를 등록하세요':'시장 '+mktStage+'단계');
+  const volOk=!hasVol||vr>=1.4;
+  let sig;
+  if(!trendPass)sig=tt>=5?{k:'wait',t:'추세 미충족 · 관망',d:'트렌드 템플릿 8개 중 '+tt+'개만 충족합니다. 조건을 갖출 때까지 기다립니다.'}:{k:'avoid',t:'매수 금지',d:'트렌드 템플릿 8개 중 '+tt+'개만 충족합니다. 상승 추세 종목이 아닙니다.'};
+  else if(dist>5)sig={k:'hot',t:'추격매수 금지',d:'피벗을 5% 넘게 올라선 상태입니다. 매수 구간을 지났으니 눌림이나 새 베이스를 기다립니다.'};
+  else if(dist>0&&vcp&&volOk&&mktStage!==4)sig={k:'buy',t:'매수 적기',d:'변동성 수축 뒤 피벗을 거래량과 함께 돌파했습니다. 손절 기준가를 정하고 진입을 검토하세요.'};
+  else if(dist>0)sig={k:'watch',t:'돌파했으나 조건 미충족',d:'미충족: '+[!vcp?'변동성 수축 패턴 없음':'',!volOk?'돌파 거래량 부족':'',mktStage===4?'시장 하락 단계':''].filter(Boolean).join(', ')+'.'};
+  else if(dist>=-5&&vcp)sig={k:'watch',t:'피벗 대기 · 관심',d:'변동성이 줄어든 채 피벗 아래 5% 안에 있습니다. 거래량이 실린 돌파를 기다립니다.'};
+  else sig={k:'hold',t:'추세 양호 · 패턴 대기',d:'상승 추세 조건은 충족하지만 아직 매수 패턴이 아닙니다.'};
+  const entry=dist>0?P:pivot;
+  let stop=entry*0.92;if(sc.lastLow!=null&&sc.lastLow<entry&&sc.lastLow*0.995>stop)stop=sc.lastLow*0.995;
+  const known=checks.slice(0,8).filter(x=>x.st!=='unk').length;
+  return{price:P,date:rows[last].d,checks,score:tt,total:known||8,sig,pivot,dist,stop,riskPct:(entry-stop)/entry*100,target:entry*1.2,
+    pattern:vcp?'VCP':null,trendPass};
+}
+function analyzeONeil(rows,bench,mktStage){
+  if(!rows||rows.length<52)return{err:'주봉 52개 이상이 필요합니다.'};
+  const T=trendCore(rows),{c,h,l,v,m10,m40,last,P,hasVol}=T;
+  const checks=[],add=(label,st,detail)=>checks.push({label,st,detail});
+  const r52=ret52(rows,bench);
+  add('L · 시장 주도주인가(시장 대비 52주 수익률)',r52==null?'unk':(r52.s>r52.m?'pass':'fail'),r52==null?'시장 지수를 등록하면 계산합니다':'종목 '+fmtPct(r52.s)+' · 시장 '+fmtPct(r52.m));
+  add('N · 52주 신고가에서 15% 이내인가',T.offHigh<=15?'pass':'fail','고점 대비 -'+T.offHigh.toFixed(1)+'%');
+  const up=m40[last]>m40[last-4],trend=P>m10[last]&&m10[last]>m40[last]&&up;
+  add('상승 추세인가(주가 > 10주선 > 40주선, 40주선 상승)',trend?'pass':'fail','10주선 '+fmtP(m10[last])+' · 40주선 '+fmtP(m40[last])+(up?' 상승':' 하락·횡보'));
+  const base=findBase(c,h,l,last);
+  add('기본 패턴(컵·핸들, 플랫 베이스)이 있는가',base?'pass':'fail',base?base.type+' · 기간 '+base.len+'주 · 깊이 '+base.depth.toFixed(0)+'%'+(base.handle!=null?' · 핸들 '+base.handle.toFixed(0)+'%':''):'뚜렷한 베이스 없음');
+  let up_v=0,dn_v=0;if(hasVol)for(let i=last-9;i<=last;i++){if(c[i]>=c[i-1])up_v+=v[i];else dn_v+=v[i];}
+  add('매집이 있는가(상승 주간 거래량 > 하락 주간 거래량)',!hasVol?'unk':(up_v>dn_v?'pass':'fail'),!hasVol?'거래량 데이터 없음':'최근 10주 상승/하락 거래량 '+(dn_v?(up_v/dn_v).toFixed(2):'∞')+'배');
+  const pivot=base?base.pivot:null,dist=base?(P/pivot-1)*100:null;
+  const vr=hasVol?Math.max(volRatio(v,last)||0,volRatio(v,last-1)||0):null;
+  add('돌파 거래량이 평균의 140% 이상인가',!base||!hasVol?'unk':(dist>0&&dist<=5?(vr>=1.4?'pass':'fail'):'unk'),!base?'패턴이 없어 확인하지 않음':!hasVol?'거래량 데이터 없음':(dist>0&&dist<=5?'최근 거래량 평균 대비 '+vr.toFixed(1)+'배':'돌파 구간이 아니면 확인하지 않음'));
+  add('M · 시장 지수가 상승 단계인가',mktStage==null?'unk':(mktStage===2?'pass':(mktStage===1?'warn':'fail')),mktStage==null?'시장 탭에서 지수를 등록하세요':'시장 '+mktStage+'단계');
+  checks.push({label:'C·A · 분기 EPS +25% 이상, 연간 성장',st:'unk',detail:'실적 데이터가 없어 확인하지 못합니다. 직접 확인하세요.'});
+  const score=checks.filter(x=>x.st==='pass').length,total=checks.filter(x=>x.st!=='unk').length;
+  const volOk=!hasVol||vr>=1.4;
+  let sig;
+  if(P<m40[last])sig={k:'avoid',t:'매수 금지',d:'주가가 40주선(200일선) 아래입니다. 오닐 방식은 이 구간의 매수를 피합니다.'};
+  else if(!trend)sig={k:'wait',t:'추세 미충족 · 관망',d:'10주선·40주선 정배열 상승 추세가 아닙니다. 추세가 회복될 때까지 기다립니다.'};
+  else if(!base)sig={k:'hold',t:'추세 양호 · 베이스 대기',d:'상승 추세지만 매수할 베이스가 아직 없습니다. 컵·핸들이나 플랫 베이스 형성을 기다립니다.'};
+  else if(dist>5)sig={k:'hot',t:'추격매수 금지',d:'매수 지점에서 5% 넘게 올라섰습니다. 이미 늦은 구간이니 새 베이스를 기다립니다.'};
+  else if(dist>0&&volOk&&mktStage!==4)sig={k:'buy',t:'매수 적기',d:'베이스의 매수 지점을 거래량과 함께 돌파했습니다. 매수가 아래 7~8%를 손절선으로 정하고 진입을 검토하세요.'};
+  else if(dist>0)sig={k:'watch',t:'돌파했으나 조건 미충족',d:'미충족: '+[!volOk?'돌파 거래량 부족':'',mktStage===4?'시장 하락 단계':''].filter(Boolean).join(', ')+'.'};
+  else if(dist>=-5)sig={k:'watch',t:'매수 지점 접근 · 관심',d:'매수 지점 아래 5% 안입니다. 거래량이 실린 돌파를 기다립니다.'};
+  else sig={k:'wait',t:'베이스 형성 중',d:'매수 지점까지 5% 넘게 남았습니다. 더 가까워질 때까지 관망합니다.'};
+  const entry=base?(dist>0?P:pivot):P;
+  return{price:P,date:rows[last].d,checks,score,total,sig,pivot,dist,stop:entry*0.92,riskPct:8,target:entry*1.2,pattern:base?base.type:null,trend};
+}
+
+function analyzeMarketONeil(rows){
+  if(!rows||rows.length<52)return{err:'주봉 52개 이상이 필요합니다.'};
+  const T=trendCore(rows),{c,v,m10,m40,last,P,hasVol}=T;
+  const up=m40[last]>m40[last-4];
+  let dist=null;
+  if(hasVol){dist=0;for(let i=last-4;i<=last;i++){if(c[i]/c[i-1]-1<=-0.002&&v[i]>v[i-1])dist++;}}
+  const checks=[],add=(label,st,detail)=>checks.push({label,st,detail});
+  add('지수가 10주선(50일선) 위인가',P>m10[last]?'pass':'fail','10주선 '+fmtP(m10[last]));
+  add('지수가 40주선(200일선) 위인가',P>m40[last]?'pass':'fail','40주선 '+fmtP(m40[last]));
+  add('40주선이 상승 중인가',up?'pass':'fail','4주 전 대비 '+((m40[last]/m40[last-4]-1)*100).toFixed(1)+'%');
+  add('분산주(거래량 늘며 하락한 주)가 적은가',dist==null?'unk':(dist<=2?'pass':'fail'),dist==null?'거래량 데이터 없음':'최근 5주 중 '+dist+'주 (주봉 근사)');
+  add('52주 고점에서 10% 이내인가',T.offHigh<=10?'pass':'fail','고점 대비 -'+T.offHigh.toFixed(1)+'%');
+  let stage,label,desc;
+  if(P<m40[last]){stage=4;label='조정장';desc='지수가 40주선 아래입니다. 오닐 방식은 신규 매수를 멈추고 현금을 늘립니다.';}
+  else if(P>m10[last]&&up&&(dist==null||dist<=2)){stage=2;label='상승장 확인';desc='지수가 단기·장기 이동평균 위에서 오르고 분산주가 적습니다. 돌파 매수가 통하는 환경입니다.';}
+  else{stage=1;label='상승 압력 약화';desc='장기 추세는 살아 있지만 단기 힘이 약하거나 분산주가 늘었습니다. 신규 매수를 줄이고 선별합니다.';}
+  return{stage,label,desc,checks,price:P,date:rows[last].d,dist,score:checks.filter(x=>x.st==='pass').length,total:checks.filter(x=>x.st!=='unk').length};
+}
+function analyzeMarketMinervini(rows){
+  if(!rows||rows.length<52)return{err:'주봉 52개 이상이 필요합니다.'};
+  const T=trendCore(rows),{m10,m30,m40,last,P}=T;
+  const checks=[],add=(label,st,detail)=>checks.push({label,st,detail});
+  add('지수가 30주선과 40주선 위인가',P>m30[last]&&P>m40[last]?'pass':'fail','30주선 '+fmtP(m30[last])+' · 40주선 '+fmtP(m40[last]));
+  add('30주선이 40주선 위인가',m30[last]>m40[last]?'pass':'fail','');
+  add('40주선이 상승 중인가',m40[last]>m40[last-4]?'pass':'fail','4주 전 대비 '+((m40[last]/m40[last-4]-1)*100).toFixed(1)+'%');
+  add('10주선 > 30주선 > 40주선인가',m10[last]>m30[last]&&m30[last]>m40[last]?'pass':'fail','정배열');
+  add('지수가 10주선 위인가',P>m10[last]?'pass':'fail','10주선 '+fmtP(m10[last]));
+  add('52주 저점보다 30% 이상 위인가',T.fromLow>=30?'pass':'fail','저점 대비 +'+T.fromLow.toFixed(0)+'%');
+  add('52주 고점에서 25% 이내인가',T.offHigh<=25?'pass':'fail','고점 대비 -'+T.offHigh.toFixed(1)+'%');
+  const sc=checks.filter(x=>x.st==='pass').length;
+  let stage,label,desc;
+  if(sc===7){stage=2;label='상승 추세 (공격 가능)';desc='지수가 트렌드 템플릿 7개 조건을 모두 충족합니다. 돌파 매수를 적극적으로 검토할 수 있습니다.';}
+  else if(sc>=5){stage=1;label='추세 약화 (선별 접근)';desc='지수가 트렌드 템플릿 '+sc+'개 조건만 충족합니다. 포지션을 줄이고 가장 강한 종목만 봅니다.';}
+  else{stage=4;label='추세 이탈 (현금 확대)';desc='지수가 트렌드 템플릿을 '+sc+'개만 충족합니다. 신규 매수를 멈추고 현금 비중을 높입니다.';}
+  return{stage,label,desc,checks,price:P,date:rows[last].d,score:sc,total:7};
+}
 //#PURE-END
 </script>
 
@@ -451,14 +633,24 @@ const CANDS={date:'2026-11-12',src:'갭 돌파 리스트 (GitHub chkchp0702-spec
     {name:'타이거일렉',code:'219130',mkt:'코스닥',sector:'분류 없음',price:107100,hi:'2년',vol:1.4,d5:13.7,rs:98},
     {name:'롯데렌탈',code:'089860',mkt:'코스피',sector:'임대·리스',price:58400,hi:'2년',vol:0.4,d5:10.0,rs:96}
   ]};
-let state={market:null,stocks:[],sel:null,tab:'stocks',form:null,settings:{capital:50000000,riskPct:1},booted:false,busy:'',lastRefresh:null,
+let state={expert:'wein',market:null,stocks:[],sel:null,tab:'stocks',form:null,settings:{capital:50000000,riskPct:1},booted:false,busy:'',lastRefresh:null,
   cands:[],candGone:[],
   conn:{url:'https://kkm-mwrc.onrender.com',secret:'',mode:'h:x-app-secret',days:1100,mktCode:'069500',auto:true}};
-let cache={mkt:null,list:{}};
+let cache={mkt:null,mO:null,mM:null,list:{},on:{},mn:{}};
 let view=null,hoverI=null,formErr='',ioMsg='',connMsg='',refreshErr='';
 
-function load(){try{const s=JSON.parse(localStorage.getItem(LS_KEY));if(s){state.market=s.market||null;state.stocks=s.stocks||[];state.settings=Object.assign(state.settings,s.settings||{});state.booted=!!s.booted;if(s.conn)state.conn=Object.assign(state.conn,s.conn);if(!state.conn.autoV2){state.conn.auto=true;state.conn.autoV2=true;}state.cands=s.cands||[];state.candGone=s.candGone||[];state.lastRefresh=s.lastRefresh||null;}}catch(e){}}
+function load(){try{const s=JSON.parse(localStorage.getItem(LS_KEY));if(s){state.market=s.market||null;state.stocks=s.stocks||[];state.settings=Object.assign(state.settings,s.settings||{});state.booted=!!s.booted;if(s.conn)state.conn=Object.assign(state.conn,s.conn);if(!state.conn.autoV2){state.conn.auto=true;state.conn.autoV2=true;}state.cands=s.cands||[];state.candGone=s.candGone||[];state.lastRefresh=s.lastRefresh||null;}}catch(e){}
+  state.stocks.forEach(x=>{if(!x.m){const a=x.auto==='oneil'?'oneil':x.auto==='mn'?'mn':'wein';x.m=[a];if(x.auto){x.a=[a];}}delete x.auto;});}
 function save(){try{localStorage.setItem(LS_KEY,JSON.stringify({market:state.market,stocks:state.stocks,settings:state.settings,booted:true,conn:state.conn,lastRefresh:state.lastRefresh,cands:state.cands,candGone:state.candGone}));}catch(e){}}
+function inEx(s,ex){return (s.m||['wein']).includes(ex);}
+function exStocks(ex){return state.stocks.filter(s=>inEx(s,ex||state.expert));}
+function putStock(name,code,rows,ex,auto){
+  const e=code&&state.stocks.find(s=>s.code===code);
+  if(e){if(!e.m)e.m=['wein'];if(!e.m.includes(ex)){e.m.push(ex);if(auto){e.a=e.a||[];e.a.push(ex);}}return e;}
+  const s={id:uid(),name,code,rows,m:[ex]};if(auto)s.a=[ex];state.stocks.push(s);return s;
+}
+function dropFrom(s,ex){s.m=(s.m||['wein']).filter(x=>x!==ex);if(s.a)s.a=s.a.filter(x=>x!==ex);}
+function pruneStocks(){state.stocks=state.stocks.filter(s=>(s.m||['wein']).length);}
 function uid(){return 'x'+Math.random().toString(36).slice(2,9);}
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 function fmtP(p){return p>=1000?Math.round(p).toLocaleString('ko-KR'):p>=100?p.toFixed(1):p.toFixed(2);}
@@ -472,49 +664,60 @@ function recompute(){
   const ms=cache.mkt&&!cache.mkt.err?cache.mkt.stage:null;
   cache.list={};
   state.stocks.forEach(s=>{cache.list[s.id]=analyze(s.rows,state.market?state.market.rows:null,ms);});
+  cache.mO=state.market?analyzeMarketONeil(state.market.rows):null;cache.mM=state.market?analyzeMarketMinervini(state.market.rows):null;
+  const mo=cache.mO&&!cache.mO.err?cache.mO.stage:null,mm=cache.mM&&!cache.mM.err?cache.mM.stage:null;
+  cache.on={};cache.mn={};
+  state.stocks.forEach(s=>{const b=state.market?state.market.rows:null;cache.on[s.id]=analyzeONeil(s.rows,b,mo);cache.mn[s.id]=analyzeMinervini(s.rows,b,mm);});
 }
 const PER_STAGE=10;
-async function loadSamples(){
+async function loadScan(kind){
   if(state.busy)return;
-  if(!state.conn.url||!state.conn.secret){refreshErr='연결 탭에서 서버 주소와 비밀키를 먼저 입력하세요.';state.tab='conn';state.sel=null;state.form=null;render();return;}
-  state.sel=null;state.form=null;state.tab='stocks';state.stop=false;refreshErr='';
+  kind=kind||'wein';
+  const keep='stocks';
+  if(!state.conn.url||!state.conn.secret){refreshErr='연결 탭에서 서버 주소와 비밀키를 먼저 입력하세요.';state.expert='conn';state.tab='stocks';state.sel=null;state.form=null;render();return;}
+  state.sel=null;state.form=null;state.expert=kind;state.tab=keep;state.stop=false;refreshErr='';
   const seen=new Set(),uni=[];
   [...STOCKDB,...state.cands].forEach(x=>{if(/^(KODEX|TIGER)/i.test(x.name)||seen.has(x.code))return;seen.add(x.code);uni.push({name:x.name,code:x.code});});
-  const days=Math.min(state.conn.days||1100,800);
   const res=[],errs=[];let done=0,okN=0,fatal='';
   const mcode=state.conn.mktCode||'069500';
   state.busy='시장 지수 조회 중…';render();
   try{
-    if(!state.market||state.market.ex||state.market.code!==mcode){const r=await fetchWeekly(mcode);state.market={name:'시장 ('+mcode+')',code:mcode,rows:r.rows};}
-    else{const r=await fetchWeekly(mcode);state.market.rows=r.rows;}
+    const r=await fetchWeekly(mcode);
+    if(!state.market||state.market.ex||state.market.code!==mcode)state.market={name:'시장 ('+mcode+')',code:mcode,rows:r.rows};else state.market.rows=r.rows;
   }catch(e){state.busy='';refreshErr=e.message;render();return;}
   recompute();
   const ms=cache.mkt&&!cache.mkt.err?cache.mkt.stage:null,bench=state.market.rows;
+  const fn=kind==='oneil'?analyzeONeil:kind==='mn'?analyzeMinervini:analyze;
+  const msK=kind==='oneil'?(cache.mO&&!cache.mO.err?cache.mO.stage:null):kind==='mn'?(cache.mM&&!cache.mM.err?cache.mM.stage:null):ms;
   const q=uni.slice();
   const worker=async()=>{
     while(q.length&&!state.stop&&!fatal){
       const it=q.shift();
       try{
-        const r=await fetchWeekly(it.code),A=analyze(r.rows,bench,ms);
+        const r=await fetchWeekly(it.code),A=fn(r.rows,bench,msK);
         if(!A.err){res.push({name:it.name,code:it.code,rows:r.rows,A});okN++;}
       }catch(e){errs.push(it.name+': '+e.message);if(!okN&&errs.length>=4&&/비밀키|연결하지/.test(e.message))fatal=e.message;}
-      done++;state.busy='단계별 종목 찾는 중 '+done+'/'+uni.length+' · 분석 성공 '+okN;
-      if(state.tab==='stocks'&&!state.sel&&!state.form)render();
+      done++;state.busy='종목 찾는 중 '+done+'/'+uni.length+' · 분석 성공 '+okN;
+      if(!state.sel&&!state.form&&state.expert===kind&&state.tab==='stocks')render();
     }
   };
   await Promise.all([worker(),worker(),worker()]);
   state.busy='';
   if(fatal){refreshErr=fatal;render();return;}
-  const rank=(a,b)=>SIGORD[a.A.sig.k]-SIGORD[b.A.sig.k]||b.A.score-a.A.score||(b.A.rsNow??-99)-(a.A.rsNow??-99)||a.A.ext-b.A.ext;
-  const mine=new Set(state.stocks.filter(x=>!x.auto).map(x=>x.code));
+  const rank=kind==='wein'
+    ?(a,b)=>SIGORD[a.A.sig.k]-SIGORD[b.A.sig.k]||b.A.score-a.A.score||(b.A.rsNow??-99)-(a.A.rsNow??-99)||a.A.ext-b.A.ext
+    :(a,b)=>SIGORD[a.A.sig.k]-SIGORD[b.A.sig.k]||b.A.score-a.A.score||Math.abs(a.A.dist??99)-Math.abs(b.A.dist??99);
+  const mine=new Set(exStocks(kind).filter(x=>!(x.a||[]).includes(kind)).map(x=>x.code));
   const picked=[];
-  for(let st=1;st<=4;st++){
-    res.filter(x=>x.A.stage===st&&!mine.has(x.code)).sort(rank).slice(0,PER_STAGE).forEach(x=>picked.push(x));
+  if(kind==='wein'){
+    for(let st=1;st<=4;st++)res.filter(x=>x.A.stage===st&&!mine.has(x.code)).sort(rank).slice(0,PER_STAGE).forEach(x=>picked.push(x));
+  }else{
+    res.filter(x=>!mine.has(x.code)&&['buy','watch','hold','hot'].includes(x.A.sig.k)).sort(rank).slice(0,PER_STAGE).forEach(x=>picked.push(x));
   }
-  state.stocks=state.stocks.filter(x=>!x.auto&&!x.ex);
-  picked.forEach(x=>state.stocks.push({id:uid(),name:x.name,code:x.code,rows:x.rows,auto:true}));
-  const cnt=[1,2,3,4].map(k=>k+'단계 '+picked.filter(x=>x.A.stage===k).length).join(' · ');
-  refreshErr=(state.stop?'중단됨. ':'')+'불러온 종목: '+cnt+(errs.length?' · 조회 실패 '+errs.length+'개 ('+errs.slice(0,2).join(' / ')+')':'');
+  state.stocks.forEach(x=>{if((x.a||[]).includes(kind))dropFrom(x,kind);});pruneStocks();
+  picked.forEach(x=>putStock(x.name,x.code,x.rows,kind,true));
+  const sum=kind==='wein'?[1,2,3,4].map(k=>k+'단계 '+picked.filter(x=>x.A.stage===k).length).join(' · '):picked.length+'종목 (매수 적기·관심·보유·추격 금지 중 적합한 순)';
+  refreshErr=(state.stop?'중단됨. ':'')+'불러온 종목: '+sum+(errs.length?' · 조회 실패 '+errs.length+'개 ('+errs.slice(0,2).join(' / ')+')':'');
   state.lastRefresh=Date.now();save();recompute();render();
 }
 function addExamples(){
@@ -525,15 +728,27 @@ function addExamples(){
 }
 
 /* ---------- 템플릿 ---------- */
+const EXPERT={
+  wein:{name:'스탠 와인스타인',short:'와인스타인',sub:'30주선 4단계 주기'},
+  oneil:{name:'윌리엄 오닐',short:'오닐',sub:'CAN SLIM · 컵·핸들 돌파'},
+  mn:{name:'마크 미너비니',short:'미너비니',sub:'트렌드 템플릿 · VCP'}
+};
 function headerHTML(){
-  const m=cache.mkt&&!cache.mkt.err?cache.mkt:null;
-  const pill=m?`<div class="mkt s${m.stage}" title="시장 지수 단계"><span class="dot" style="background:var(--c)">${m.stage}</span><span>시장 ${STAGE[m.stage].name}</span></div>`
-    :`<div class="mkt"><span>시장 지수 없음</span></div>`;
-  return `<div class="top"><div><h1>스테이지 분석기</h1><p>30주 이동평균으로 보는 4단계 주기</p></div>${pill}</div>`;
+  const ex=state.expert,E=EXPERT[ex]||{name:'연결',sub:'세 방식이 함께 쓰는 시세 서버'};
+  let pill;
+  if(ex==='wein'){const m=cache.mkt&&!cache.mkt.err?cache.mkt:null;
+    pill=m?`<div class="mkt s${m.stage}" title="시장 지수 단계"><span class="dot" style="background:var(--c)">${m.stage}</span><span>시장 ${STAGE[m.stage].name}</span></div>`:`<div class="mkt"><span>시장 지수 없음</span></div>`;}
+  else if(ex==='oneil'||ex==='mn'){const m=ex==='oneil'?cache.mO:cache.mM;
+    pill=m&&!m.err?`<div class="mkt s${m.stage}" title="시장 판정"><span class="dot" style="background:var(--c)">${m.stage===2?'▲':m.stage===1?'△':'▼'}</span><span>${m.label}</span></div>`:`<div class="mkt"><span>시장 지수 없음</span></div>`;}
+  else pill='';
+  return `<div class="top"><div><h1>${ex==='conn'?'연결':E.short}</h1><p>${E.sub}</p></div>${pill}</div>`;
 }
 function tabsHTML(){
+  const ex=state.expert;
+  const e=(k,l)=>`<button data-act="expert" data-id="${k}" ${ex===k&&!state.form?'aria-current="page"':''}>${l}</button>`;
   const t=(k,l)=>`<button data-act="tab" data-id="${k}" ${state.tab===k&&!state.form?'aria-current="page"':''}>${l}</button>`;
-  return `<nav class="tabs">${t('stocks','종목')}${t('cand','후보')}${t('market','시장')}${t('conn','연결')}${t('rules','규칙')}</nav>`;
+  const sub=ex==='conn'?'':`<nav class="tabs sub">${t('stocks','종목')}${ex==='wein'?t('cand','후보'):''}${t('market','시장')}${t('rules','규칙')}</nav>`;
+  return `<nav class="tabs main">${e('wein','와인스타인')}${e('oneil','오닐')}${e('mn','미너비니')}${e('conn','연결')}</nav>${sub}`;
 }
 function sparkSVG(rows,A){
   const N=Math.min(52,rows.length),off=rows.length-N,pts=rows.slice(off).map(r=>r.c);
@@ -542,7 +757,7 @@ function sparkSVG(rows,A){
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline points="${d}" fill="none" stroke="var(--c)" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
 }
 function listHTML(){
-  const items=state.stocks.map(s=>({s,A:cache.list[s.id]})).filter(x=>x.A);
+  const items=exStocks('wein').map(s=>({s,A:cache.list[s.id]})).filter(x=>x.A);
   items.sort((a,b)=>(a.A.err?9:SIGORD[a.A.sig.k])-(b.A.err?9:SIGORD[b.A.sig.k])||a.s.name.localeCompare(b.s.name,'ko'));
   const cnt={1:0,2:0,3:0,4:0};items.forEach(x=>{if(!x.A.err)cnt[x.A.stage]++;});
   const sum=[2,1,3,4].map(k=>`<span class="s${k}"><i></i>${STAGE[k].n} <b class="num">${cnt[k]}</b></span>`).join('');
@@ -556,7 +771,7 @@ function listHTML(){
       <span class="right"><span class="sig ${A.sig.k}">${A.sig.t.split(' · ')[0]}</span>${sparkSVG(s.rows,A)}</span></button>`;
   }).join('');
   const hasEx=state.stocks.some(s=>s.ex)||(state.market&&state.market.ex);
-  return `<div class="bar"><button class="btn primary" data-act="add-stock">종목 추가</button><button class="btn" data-act="add-bulk">코드로 일괄 추가</button><button class="btn" data-act="refresh-all" ${state.busy?'disabled':''}>전체 새로고침</button>${state.stocks.length?`<button class="btn" data-act="toggle-manage">${state.manage?'정리 끝내기':'종목 정리(삭제)'}</button>`:''}
+  return `<div class="bar"><button class="btn primary" data-act="add-stock">종목 추가</button><button class="btn" data-act="add-bulk">코드로 일괄 추가</button><button class="btn" data-act="refresh-all" ${state.busy?'disabled':''}>전체 새로고침</button>${exStocks('wein').length?`<button class="btn" data-act="toggle-manage">${state.manage?'정리 끝내기':'종목 정리(삭제)'}</button>`:''}
     <button class="btn" data-act="load-ex" ${state.busy?'disabled':''}>단계별 10종목 불러오기</button>${hasEx?'<button class="btn" data-act="clear-ex">예시 지우기</button>':''}</div>
     ${state.manage?'<p class="note">삭제할 종목의 삭제 버튼을 누르세요. 추가한 종목은 이 기기에 자동 저장됩니다.</p>':''}${statusHTML()}${!state.busy&&state.lastRefresh?`<p class="note">마지막 새로고침 ${esc(new Date(state.lastRefresh).toLocaleString('ko-KR'))}</p>`:''}${resultsHTML(items)}
     ${items.length?`<div class="summary">${sum}</div><div class="list">${rows}</div>`:`<div class="card"><h3>등록된 종목이 없습니다</h3><p class="note">종목 추가에서 일봉 또는 주봉 표를 붙여넣으면 현재 단계와 매수·매도 신호를 계산합니다.</p></div>`}
@@ -567,7 +782,7 @@ function listHTML(){
       ${ioMsg?`<p class="note">${esc(ioMsg)}</p>`:''}</details>
     <p class="foot">이 앱은 책의 규칙을 기계적으로 적용한 참고용 도구이며, 투자 판단과 책임은 본인에게 있습니다.</p>`;
 }
-function statusHTML(){return (state.busy?`<p class="note" role="status">${esc(state.busy)}${state.busy.startsWith('단계별')?' <button class="btn small" data-act="scan-stop">중단</button>':''}</p>`:'')+(refreshErr?`<p class="err">${esc(refreshErr)}</p>`:'');}
+function statusHTML(){return (state.busy?`<p class="note" role="status">${esc(state.busy)}${state.busy.startsWith('종목 찾는 중')?' <button class="btn small" data-act="scan-stop">중단</button>':''}</p>`:'')+(refreshErr?`<p class="err">${esc(refreshErr)}</p>`:'');}
 function resultsHTML(items){
   const ok=items.filter(x=>!x.A.err);
   if(!ok.length)return '';
@@ -866,7 +1081,7 @@ async function refreshOne(s){
 }
 async function refreshAll(silent,boot){
   if(state.busy)return;
-  const list=(boot&&!state.conn.autoStocks)?[]:state.stocks.filter(s=>s.code&&!s.ex),hasMk=state.market&&state.market.code&&!state.market.ex;
+  const list=(boot&&!state.conn.autoStocks)?[]:(boot?state.stocks:exStocks()).filter(s=>s.code&&!s.ex),hasMk=state.market&&state.market.code&&!state.market.ex;
   const mkCode=hasMk?state.market.code:(boot&&state.conn.mktCode?state.conn.mktCode:''),mk=!!mkCode;
   const total=list.length+(mk?1:0);
   if(!total){if(!silent){refreshErr='종목코드가 있는 종목이 없습니다. 종목을 코드로 추가하세요.';render();}return;}
@@ -894,12 +1109,12 @@ async function saveBulk(){
   if(state.busy)return;
   const codes=[...new Set($('#f-codes').value.split(/[\s,;]+/).map(x=>x.trim().toUpperCase()).filter(Boolean))];
   if(!codes.length){formErr='종목코드를 입력하세요.';render();$('#f-codes').focus();return;}
-  const have=new Set(state.stocks.map(s=>s.code)),errs=[];
+  const have=new Set(exStocks().map(s=>s.code)),errs=[];
   state.form=null;state.tab='stocks';state.sel=null;formErr='';refreshErr='';
   for(let i=0;i<codes.length;i++){
     const cd=codes[i];if(have.has(cd))continue;
     state.busy='종목 추가 중 '+(i+1)+'/'+codes.length+' · '+cd;render();
-    try{const r=await fetchWeekly(cd);state.stocks.push({id:uid(),name:r.name||cd,code:cd,rows:r.rows});}
+    try{const ex0=state.stocks.find(s=>s.code===cd);if(ex0)putStock(ex0.name,cd,ex0.rows,state.expert);else{const r=await fetchWeekly(cd);putStock(r.name||cd,cd,r.rows,state.expert);}}
     catch(e){errs.push(cd+': '+e.message);}
   }
   state.busy='';refreshErr=errs.slice(0,4).join(' / ');save();recompute();render();
@@ -921,7 +1136,7 @@ function candHTML(){
   const L={pass:'충족',fail:'미충족',warn:'주의',unk:'확인불가'};
   const mk=cache.mkt&&!cache.mkt.err?cache.mkt:null;
   const cards=state.cands.map(c=>{
-    const s=state.stocks.find(x=>x.code===c.code),A=s?cache.list[s.id]:null,ck=candChecks(c,A);
+    const s=exStocks('wein').find(x=>x.code===c.code),A=s?cache.list[s.id]:null,ck=candChecks(c,A);
     const pass=ck.filter(x=>x.st==='pass').length;
     const verdict=A&&!A.err?`<span class="sig ${A.sig.k}">앱 판정 ${A.stage}단계 · ${A.sig.t.split(' · ')[0]}</span>`:`<span class="sig wait">앱 분석 전</span>`;
     return `<div class="card"><div class="candhead"><div><b>${esc(c.name)}</b> <span class="num">${c.code}</span><br><span class="note">${c.mkt} · ${esc(c.sector)}</span></div>${verdict}</div>
@@ -930,7 +1145,7 @@ function candHTML(){
       <ul class="checks">${ck.map(x=>`<li><span class="pill ${x.st}">${L[x.st]}</span><div><b>${x.label}</b><span class="d">${esc(x.detail)}</span></div></li>`).join('')}</ul>
       <div class="bar" style="margin:12px 0 0">${s?`<button class="btn primary" data-act="cand-open" data-id="${c.code}">앱 분석 보기</button>`:`<button class="btn primary" data-act="cand-add" data-id="${c.code}" ${state.busy?'disabled':''}>앱에서 분석</button>`}<button class="btn danger" data-act="cand-del" data-id="${c.code}">후보에서 삭제</button></div></div>`;
   }).join('');
-  const all=state.cands.every(c=>state.stocks.some(s=>s.code===c.code));
+  const all=state.cands.every(c=>exStocks('wein').some(s=>s.code===c.code));
   return `<div class="card"><h3>신고가 후보 <span class="score">${esc(CANDS.date)} 기준</span></h3>
     <p class="note">${esc(CANDS.rule)}입니다. 한국 시장에서 이 조건을 통과한 종목은 ${CANDS.items.length}개뿐이었습니다. 외부 스크리닝 결과라 정확도는 확인되지 않았습니다.</p>
     ${mk&&mk.stage>=3?`<p class="note"><b>시장 ${mk.stage}단계</b>: 책의 규칙으로는 신규 매수를 보류하는 구간이라 관찰용으로만 보세요.</p>`:''}
@@ -941,35 +1156,109 @@ function candHTML(){
 }
 async function addCodes(codes,tab){
   if(state.busy)return;
-  const have=new Set(state.stocks.map(s=>s.code)),errs=[],nm={};STOCKDB.forEach(x=>{nm[x.code]=x.name;});state.cands.forEach(x=>{nm[x.code]=x.name;});
+  const have=new Set(exStocks('wein').map(s=>s.code)),errs=[],nm={};STOCKDB.forEach(x=>{nm[x.code]=x.name;});state.cands.forEach(x=>{nm[x.code]=x.name;});
   if(!state.conn.url||!state.conn.secret){refreshErr='연결 탭에서 서버 주소와 비밀키를 먼저 입력하세요.';render();return;}
-  state.tab=tab||'cand';refreshErr='';
+  state.expert='wein';state.tab=tab||'cand';refreshErr='';
   for(let i=0;i<codes.length;i++){
     const cd=codes[i];if(have.has(cd))continue;
     state.busy='종목 추가 중 '+(i+1)+'/'+codes.length+' · '+(nm[cd]||cd);render();
-    try{const r=await fetchWeekly(cd);state.stocks.push({id:uid(),name:nm[cd]||r.name||cd,code:cd,rows:r.rows});}
+    try{const ex0=state.stocks.find(s=>s.code===cd);if(ex0)putStock(ex0.name,cd,ex0.rows,'wein');else{const r=await fetchWeekly(cd);putStock(nm[cd]||r.name||cd,cd,r.rows,'wein');}}
     catch(e){errs.push((nm[cd]||cd)+': '+e.message);}
   }
   state.busy='';refreshErr=errs.slice(0,4).join(' / ');save();recompute();render();
 }
 async function addCandidate(code){
   const c=state.cands.find(x=>x.code===code);if(!c)return;
-  if(!state.conn.url||!state.conn.secret){state.tab='stocks';state.sel=null;state.form={mode:'stock',prefill:{name:c.name,code:c.code}};formErr='';render();window.scrollTo(0,0);return;}
+  if(!state.conn.url||!state.conn.secret){state.expert='wein';state.tab='stocks';state.sel=null;state.form={mode:'stock',prefill:{name:c.name,code:c.code}};formErr='';render();window.scrollTo(0,0);return;}
   await addCodes([code]);
-  const s=state.stocks.find(x=>x.code===code);
+  const s=exStocks('wein').find(x=>x.code===code);
   if(s&&!refreshErr){state.tab='stocks';state.sel=s.id;render();window.scrollTo(0,0);}
+}
+
+
+/* ---------- 오닐 · 미너비니 화면 ---------- */
+const METHOD={
+  oneil:{title:'윌리엄 오닐',sub:'CAN SLIM · 컵·핸들 돌파',
+    intro:'신고가에 가까운 주도주가 거래량을 싣고 베이스(컵·핸들, 플랫 베이스)를 돌파하는 순간에 사고, 매수가 아래 7~8%에서 손절합니다. 돌파 지점에서 5% 넘게 오른 뒤에는 추격하지 않습니다.',
+    core:['시장 방향(M)이 먼저입니다. 지수가 조정장이면 아무리 좋은 종목도 사지 않습니다.','주도주(L)와 신고가(N): 시장보다 강하고 52주 신고가 가까이에 있는 종목만 봅니다.','실적(C·A): 분기 EPS가 25% 이상, 연간 성장도 꾸준한 종목이 좋습니다. 이 앱은 가격만 다뤄 실적은 직접 확인해야 합니다.','기본 패턴(컵·핸들, 플랫 베이스)을 만든 뒤 돌파할 때만 삽니다.'],
+    buy:['컵·핸들: 12~33% 조정 후 오른쪽이 왼쪽 고점의 85% 이상 회복하고, 핸들이 12% 이내','플랫 베이스: 직전 30% 이상 상승 뒤 5주 이상 15% 이내 횡보','매수 지점은 베이스의 최고가이고, 거래량이 최근 평균의 140% 이상이면 돌파로 봅니다','매수 구간은 매수 지점에서 +5%까지이며, 그 위는 추격하지 않습니다'],
+    sell:['매수가 아래 7~8%에서 무조건 손절합니다. 이 앱은 8%를 기준으로 계산합니다.','20~25% 오르면 수익의 일부를 확정합니다. 이 앱은 +20%를 1차 목표로 표시합니다.','40주선(200일선)을 이탈하면 매수 금지 구간입니다.'],
+    table:[['돌파 거래량 기준 (최근 10주 평균 대비)','140% 이상'],['매수 구간 상한 (매수 지점 대비)','+5%'],['52주 신고가 근접','15% 이내'],['컵 깊이','12~33%'],['핸들 깊이','12% 이내'],['플랫 베이스 폭 · 기간','15% 이내 · 5~12주'],['손절','매수가 −8%'],['1차 목표','+20%']]},
+  mn:{title:'마크 미너비니',sub:'트렌드 템플릿 · VCP',
+    intro:'트렌드 템플릿 8개 조건을 갖춘 2단계 상승 종목 중에서, 되돌림이 점점 작아지는 변동성 수축(VCP) 끝에 피벗을 거래량과 함께 돌파할 때 삽니다. 손절은 7~8% 안쪽으로 짧게 잡습니다.',
+    core:['먼저 트렌드 템플릿으로 상승 추세 종목만 고릅니다(와인스타인의 2단계와 같은 개념).','그 안에서 변동성이 줄어드는 베이스(VCP)를 만든 종목만 후보로 둡니다.','피벗(저항선)을 거래량과 함께 돌파하는 순간이 매수 시점이고, 일찍 사는 대신 손절을 짧게 잡습니다.','손실은 작게, 이익은 크게: 평균 손실을 7~8% 안쪽으로 묶습니다.'],
+    buy:['트렌드 템플릿: 주가 > 30주선·40주선, 30주선 > 40주선, 40주선 상승, 10주선 > 30주선 > 40주선, 주가 > 10주선','52주 저점보다 30% 이상 위, 52주 고점에서 25% 이내, 시장 대비 강세','VCP: 되돌림 깊이가 점점 줄고 마지막이 12% 이내이며, 거래량이 마릅니다','피벗을 거래량 140% 이상으로 돌파하면 매수이고, +5%를 넘으면 추격하지 않습니다'],
+    sell:['손절은 매수가 −8% 또는 마지막 수축 저점 바로 아래이며, 최대 10%를 넘기지 않습니다.','20% 안팎 오르면 일부를 팔아 손실 위험을 없앱니다. 이 앱은 +20%를 1차 목표로 표시합니다.','10주선을 거래량 늘며 이탈하면 정리를 검토합니다.'],
+    table:[['돌파 거래량 기준','140% 이상'],['매수 구간 상한 (피벗 대비)','+5%'],['52주 저점 대비','+30% 이상'],['52주 고점 대비','−25% 이내'],['VCP 마지막 수축 깊이','12% 이내'],['손절','−8% 또는 수축 저점 아래'],['1차 목표','+20%'],['상대강도','시장 대비 52주 수익률로 대체']]}
+};
+function methodHTML(ex){
+  const M=METHOD[ex],cc=ex==='oneil'?cache.on:cache.mn,mk=ex==='oneil'?cache.mO:cache.mM;
+  const list=exStocks(ex);
+  const items=list.map(s=>({s,A:cc[s.id]})).filter(x=>x.A);
+  const good=items.filter(x=>!x.A.err);
+  good.sort((a,b)=>SIGORD[a.A.sig.k]-SIGORD[b.A.sig.k]||b.A.score-a.A.score||a.s.name.localeCompare(b.s.name,'ko'));
+  const errs=items.filter(x=>x.A.err);
+  const grp=[['buy','매수 적기'],['watch','관심'],['hold','보유·대기'],['hot','추격 금지'],['wait','관망'],['avoid','매수 금지']];
+  const sumry=grp.map(([k,l])=>{const g=good.filter(x=>x.A.sig.k===k);return g.length?`<span class="sig ${k}">${l} ${g.length}</span>`:'';}).join(' ');
+  const L={pass:'충족',fail:'미충족',warn:'주의',unk:'확인불가'};
+  const rows=good.map(({s,A})=>state.manage?
+    `<div class="row mrow"><span class="badge">${A.score}</span><span><span class="name">${esc(s.name)}</span><span class="sub"><span class="num">${esc(s.code||'')}</span></span></span><button class="btn danger small" data-act="delete" data-id="${s.id}">삭제</button></div>`:
+    `<details class="card mrow2"><summary><span class="mname"><b>${esc(s.name)}</b> <span class="num">${esc(s.code||'')}</span></span><span class="sig ${A.sig.k}">${A.sig.t.split(' · ')[0]}</span><span class="score">${A.score}/${A.total}</span></summary>
+    <p class="note"><b>${esc(A.sig.t)}</b><br>${esc(A.sig.d)}</p>
+    <div class="tiles">
+      <div class="tile"><small>현재가</small><b>${fmtP(A.price)}</b></div>
+      <div class="tile"><small>매수 지점(피벗)</small><b>${A.pivot!=null&&isFinite(A.pivot)?fmtP(A.pivot):'—'}</b><em>${A.dist!=null?(A.dist>=0?'+':'')+A.dist.toFixed(1)+'% 위치':'패턴 없음'}${A.pattern?' · '+esc(A.pattern):''}</em></div>
+      <div class="tile"><small>손절 기준가</small><b>${fmtP(A.stop)}</b><em>위험 ${A.riskPct.toFixed(1)}%</em></div>
+      <div class="tile"><small>1차 목표(+20%)</small><b>${fmtP(A.target)}</b></div></div>
+    <ul class="checks">${A.checks.map(x=>`<li><span class="pill ${x.st}">${L[x.st]}</span><div><b>${esc(x.label)}</b><span class="d">${esc(x.detail)}</span></div></li>`).join('')}</ul>
+    <div class="bar" style="margin:6px 0 0"><button class="btn small" data-act="open-stage" data-id="${s.id}">차트 보기</button><button class="btn small danger" data-act="delete" data-id="${s.id}">삭제</button></div></details>`).join('');
+  const errRows=errs.map(({s,A})=>`<div class="row mrow"><span class="badge">?</span><span><span class="name">${esc(s.name)}</span><span class="sub">${esc(A.err)}</span></span><button class="btn danger small" data-act="delete" data-id="${s.id}">삭제</button></div>`).join('');
+  return `<div class="card"><h3>${M.title} 종목 <span class="score">${list.length}개</span></h3><p class="note">${M.intro}</p>
+    ${mk&&!mk.err&&mk.stage===4?`<p class="note"><b>시장 ${mk.label}</b>: 신규 매수를 보류하는 구간입니다.</p>`:''}
+    <div class="bar" style="margin:6px 0 0"><button class="btn primary" data-act="add-stock">종목 추가</button><button class="btn" data-act="add-bulk">코드로 일괄 추가</button><button class="btn" data-act="scan" ${state.busy?'disabled':''}>이 방식 상위 10종목 불러오기</button><button class="btn" data-act="refresh-all" ${state.busy?'disabled':''}>전체 새로고침</button>${list.length?`<button class="btn" data-act="toggle-manage">${state.manage?'정리 끝내기':'종목 정리(삭제)'}</button>`:''}</div>
+    ${statusHTML()}${!state.busy&&state.lastRefresh?`<p class="note">마지막 새로고침 ${esc(new Date(state.lastRefresh).toLocaleString('ko-KR'))}</p>`:''}</div>
+    ${good.length?`<div class="card"><h3>결과 <span class="score">${good.length}종목</span></h3><div class="reslist">${sumry}</div></div>${rows}`:(list.length?'':'<div class="card"><h3>등록된 종목이 없습니다</h3><p class="note">종목 추가로 직접 넣거나, 위 버튼으로 이 방식에 맞는 종목을 불러오세요. 주봉 52개 이상이 필요합니다.</p></div>')}
+    ${errRows}`;
+}
+function marketExpertHTML(ex){
+  const M=METHOD[ex],m=ex==='oneil'?cache.mO:cache.mM,A=cache.mkt;
+  if(!state.market)return `<div class="card"><h3>시장 지수가 없습니다</h3><p class="note">시장 지수는 세 방식이 함께 씁니다. 연결 탭에서 서버를 연결하면 앱을 열 때 자동으로 받아옵니다.</p></div><div class="bar"><button class="btn primary" data-act="fetch-market" ${state.busy?'disabled':''}>자동 조회</button></div>`;
+  if(!m||m.err)return `<div class="card"><p class="err">${esc(m?m.err:'분석 실패')}</p></div>`;
+  const L={pass:'충족',fail:'미충족',warn:'주의',unk:'확인불가'};
+  if(A&&!A.err)view={rows:state.market.rows,A};
+  return statusHTML()+`<div class="card hero s${m.stage}"><div class="big">${m.stage===2?'▲':m.stage===1?'△':'▼'}<small>${m.score}/${m.total}</small></div>
+    <div><h2>${esc(state.market.name)}</h2><span class="sig ${m.stage===2?'buy':m.stage===1?'watch':'avoid'}">${m.label}</span><p>${m.desc}</p></div></div>
+    ${A&&!A.err?chartHTML(A,false):''}
+    <div class="card"><h3>${M.title}식 시장 점검 <span class="score">${m.score}/${m.total} 충족</span></h3><ul class="checks">${m.checks.map(x=>`<li><span class="pill ${x.st}">${L[x.st]}</span><div><b>${esc(x.label)}</b><span class="d">${esc(x.detail)}</span></div></li>`).join('')}</ul>
+    <p class="note">차트의 색 배경은 와인스타인의 4단계 구간이고, 주황선은 30주선입니다. 시장 지수는 연결 탭의 대용 종목(기본 KODEX 200)을 씁니다.</p></div>
+    <div class="bar"><button class="btn primary" data-act="fetch-market" ${state.busy?'disabled':''}>자동 조회</button></div>`;
+}
+function rulesExpertHTML(ex){
+  const M=METHOD[ex],li=a=>a.map(x=>`<li>${esc(x)}</li>`).join('');
+  return `<div class="card rules"><h3>${M.title} <span class="score">${M.sub}</span></h3>
+    <h3>핵심 원칙</h3><ul>${li(M.core)}</ul>
+    <h3>매수 규칙</h3><ul>${li(M.buy)}</ul>
+    <h3>매도와 손절</h3><ul>${li(M.sell)}</ul>
+    <h3>이 앱의 판정 기준</h3><table class="p">${M.table.map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join('')}</table>
+    <p class="note">이 앱은 가격·거래량으로 판정할 수 있는 부분만 기계적으로 옮겼습니다. 패턴 인식은 주봉 가격으로 근사한 것이라 차트로 한 번 더 확인하세요. 참고용이며 투자 판단과 책임은 본인에게 있습니다.</p></div>`;
 }
 
 /* ---------- 렌더 ---------- */
 function render(){
   view=null;hoverI=null;
-  let body;
+  const ex=state.expert;let body;
   if(state.form)body=formHTML();
-  else if(state.tab==='stocks')body=state.sel?detailHTML(state.sel):listHTML();
-  else if(state.tab==='cand')body=candHTML();
-  else if(state.tab==='market')body=marketHTML();
-  else if(state.tab==='conn')body=connHTML();
-  else body=rulesHTML();
+  else if(ex==='conn')body=connHTML();
+  else if(ex==='wein'){
+    if(state.tab==='stocks')body=state.sel?detailHTML(state.sel):listHTML();
+    else if(state.tab==='cand')body=candHTML();
+    else if(state.tab==='market')body=marketHTML();
+    else body=rulesHTML();
+  }else{
+    if(state.tab==='market')body=marketExpertHTML(ex);
+    else if(state.tab==='rules')body=rulesExpertHTML(ex);
+    else body=methodHTML(ex);
+  }
   $('#app').innerHTML=headerHTML()+tabsHTML()+body;
   drawAll();
 }
@@ -1041,7 +1330,8 @@ function readFile(file){return new Promise((res,rej)=>{const fr=new FileReader()
 document.addEventListener('click',e=>{
   const b=e.target.closest('[data-act]');if(!b)return;
   const act=b.dataset.act,id=b.dataset.id;
-  if(act==='tab'){state.manage=false;state.tab=id;state.sel=null;state.form=null;formErr='';render();window.scrollTo(0,0);}
+  if(act==='expert'){state.manage=false;state.expert=id;state.tab='stocks';state.sel=null;state.form=null;formErr='';render();window.scrollTo(0,0);}
+  else if(act==='tab'){state.manage=false;state.tab=id;state.sel=null;state.form=null;formErr='';render();window.scrollTo(0,0);}
   else if(act==='open'){state.sel=id;render();window.scrollTo(0,0);}
   else if(act==='back'){state.sel=null;render();}
   else if(act==='add-stock'){state.form={mode:'stock'};formErr='';render();}
@@ -1053,22 +1343,23 @@ document.addEventListener('click',e=>{
   else if(act==='cand-add'){addCandidate(id);}
   else if(act==='cand-del'){const c=state.cands.find(x=>x.code===id);if(c&&!confirm('"'+c.name+'"을(를) 후보 목록에서 삭제할까요?'))return;state.cands=state.cands.filter(x=>x.code!==id);if(!state.candGone.includes(id))state.candGone.push(id);save();render();}
   else if(act==='cand-all'){addCodes(state.cands.map(x=>x.code));}
-  else if(act==='cand-open'){const s=state.stocks.find(x=>x.code===id);if(s){state.tab='stocks';state.sel=s.id;render();window.scrollTo(0,0);}}
+  else if(act==='cand-open'){const s=exStocks('wein').find(x=>x.code===id);if(s){state.tab='stocks';state.sel=s.id;render();window.scrollTo(0,0);}}
   else if(act==='edit'){state.form={mode:'stock',id};formErr='';render();}
   else if(act==='cancel-form'){state.form=null;formErr='';render();}
   else if(act==='pick-sug'){pickSug(b.dataset.name,id);}
   else if(act==='save-form'){saveForm();}
   else if(act==='toggle-manage'){state.manage=!state.manage;render();}
-  else if(act==='delete'){const t=state.stocks.find(s=>s.id===id);if(t&&!confirm('"'+t.name+'" 종목을 삭제할까요?'))return;state.stocks=state.stocks.filter(s=>s.id!==id);state.sel=null;save();recompute();if(!state.stocks.length)state.manage=false;render();}
+  else if(act==='delete'){const t=state.stocks.find(x=>x.id===id);if(t&&!confirm('"'+t.name+'" 종목을 이 목록에서 삭제할까요?'))return;if(t)dropFrom(t,state.expert);pruneStocks();state.sel=null;save();recompute();if(!exStocks().length)state.manage=false;render();}
   else if(act==='del-market'){state.market=null;save();recompute();render();}
-  else if(act==='load-ex'){loadSamples();}
+  else if(act==='load-ex'||act==='scan'){loadScan(state.expert);}
+  else if(act==='open-stage'){state.expert='wein';state.tab='stocks';state.sel=id;render();window.scrollTo(0,0);}
   else if(act==='scan-stop'){state.stop=true;b.disabled=true;}
   else if(act==='clear-ex'){state.stocks=state.stocks.filter(s=>!s.ex);if(state.market&&state.market.ex)state.market=null;save();recompute();render();}
   else if(act==='export'){const t=$('#io');t.value=JSON.stringify({v:1,market:state.market,stocks:state.stocks.filter(s=>!s.ex)});ioMsg='';}
   else if(act==='copy-io'){const t=$('#io');t.select();try{navigator.clipboard.writeText(t.value);}catch(err){}}
   else if(act==='import'){
     try{const o=JSON.parse($('#io').value);if(!o||!Array.isArray(o.stocks))throw 0;
-      if(o.market)state.market=o.market;o.stocks.forEach(s=>{if(s&&s.name&&Array.isArray(s.rows))state.stocks.push({id:uid(),name:s.name,code:s.code||'',rows:s.rows,ex:!!s.ex});});
+      if(o.market)state.market=o.market;o.stocks.forEach(s=>{if(s&&s.name&&Array.isArray(s.rows))state.stocks.push({id:uid(),name:s.name,code:s.code||'',rows:s.rows,ex:!!s.ex,m:(Array.isArray(s.m)&&s.m.length)?s.m:['wein'],a:s.a});});
       save();recompute();ioMsg='가져왔습니다.';render();}
     catch(err){ioMsg='백업 텍스트를 읽지 못했습니다.';const d=document.querySelector('details');render();const dd=document.querySelector('details');if(dd)dd.open=true;}
   }
@@ -1099,9 +1390,9 @@ async function saveForm(){
     if(!name)throw new Error('이름을 입력하세요.');
     if(f.mode==='market')state.market={name,code:code||(cur&&cur.code)||'',rows:rows||cur.rows};
     else if(f.id){const s=state.stocks.find(x=>x.id===f.id);s.name=name;s.code=code||s.code||'';if(rows)s.rows=rows;s.ex=false;}
-    else state.stocks.push({id:uid(),name,code,rows});
+    else{const ex0=code&&state.stocks.find(x=>x.code===code);if(ex0&&!rows)putStock(ex0.name,code,ex0.rows,state.expert);else if(ex0){ex0.rows=rows;putStock(name,code,rows,state.expert);}else state.stocks.push({id:uid(),name,code,rows,m:[state.expert]});}
     save();recompute();state.form=null;formErr='';refreshErr='';
-    if(f.mode==='market'){state.tab='market';}else{state.tab='stocks';if(!f.id)state.sel=state.stocks[state.stocks.length-1].id;}
+    if(f.mode==='market'){state.tab='market';}else{state.tab='stocks';if(!f.id&&state.expert==='wein'){const ls=exStocks('wein');state.sel=ls[ls.length-1].id;}}
     render();window.scrollTo(0,0);
   }catch(err){formErr=err.message||'저장하지 못했습니다.';
     const n=$('#f-name').value,d=$('#f-data').value,cd=$('#f-code').value;render();$('#f-name').value=n;$('#f-data').value=d;$('#f-code').value=cd;}
